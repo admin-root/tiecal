@@ -20,7 +20,7 @@ namespace TieCal
         /// </summary>
         public EntryIDMapping()
         {
-            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LotusNotesSync");
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TieCal");
             Directory.CreateDirectory(folder);
             Filename = Path.Combine(folder, "IDMapping.txt");
         }
