@@ -217,6 +217,16 @@ namespace TieCal
         {
             settings.NotesPassword = txtNotesPassword.Password;
         }
+
+        private void btnRefreshNotesDB_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshNotesDatabases();
+        }
+
+        private void cmbNotesDB_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            settings.NotesDatabase = (string) cmbNotesDB.SelectedItem;
+        }
     }
 
     /// <summary>

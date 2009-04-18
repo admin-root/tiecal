@@ -23,9 +23,12 @@
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<TextBlock Margin="4" Text="Notes Password:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-				<PasswordBox Margin="4" x:Name="txtNotesPassword" PasswordChanged="txtNotesPassword_PasswordChanged" Grid.Column="1" Width="120"/>
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,4,4,4">
+					<PasswordBox x:Name="txtNotesPassword" PasswordChanged="txtNotesPassword_PasswordChanged" Width="120"/>
+					<Button Content="Refresh" x:Name="btnRefreshNotesDB" Margin="4,0,0,0" Click="btnRefreshNotesDB_Click"/>
+				</StackPanel>
 				<TextBlock Margin="4" Grid.Row="1" Text="Notes DB:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-				<ComboBox Margin="4" Grid.Column="1" Grid.Row="1" x:Name="cmbNotesDB" Width="120" VerticalAlignment="Top"/>
+				<ComboBox Margin="4" Grid.Column="1" Grid.Row="1" x:Name="cmbNotesDB" VerticalAlignment="Top" SelectionChanged="cmbNotesDB_SelectionChanged"/>
 			</Grid>
 		</Expander>
 		<StackPanel x:Name="pnlActionButtons" Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" Margin="8,8,8,8">

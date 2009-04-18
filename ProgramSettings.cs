@@ -25,7 +25,7 @@ namespace TieCal
         {
             get
             {
-                string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LotusNotesSync");
+                string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TieCal");
                 Directory.CreateDirectory(folder);
                 return Path.Combine(folder, "ProgramSettings.txt");
             }
