@@ -56,7 +56,18 @@ namespace TieCal
             return newEntry;
         }
 
-        private AppointmentItem GetAppointmentItem(string outlookID, MAPIFolder calendarFolder)
+        private AppointmentItem GetExistingAppointmentItem(string outlookID, MAPIFolder calendarFolder)
+        {
+            if (outlookID == null)
+                throw new ArgumentNullException("outlookID");
+            if (calendarFolder == null)
+                throw new ArgumentNullException("calendarFolder");
+            foreach (AppointmentItem item in calendarFolder.Items)
+                if (item.GlobalAppointmentID == outlookID)
+                    return item;
+            throw new ApplicationException("No outlook appointment with id=" + outlookID + " exists");
+        }
+        private AppointmentItem GetOrCreateAppointmentItem(string outlookID, MAPIFolder calendarFolder)
         {
             if (outlookID != null)
             {
@@ -64,43 +75,84 @@ namespace TieCal
                     if (item.GlobalAppointmentID == outlookID)
                         return item;
             }
+
             return (AppointmentItem)calendarFolder.Items.Add(OlItemType.olAppointmentItem);
         }
 
         /// <summary>
-        /// Merges the specified calendar entries with items already in Outlook. Each entry
-        /// must have a valid OutlookID if it should be updated, otherwise a new entry will be created.
+        /// Updates the specified appointmentitem with data from the provided CalendarEntry.
         /// </summary>
-        /// <remarks>No entries in outlook will be removed in this method</remarks>
-        /// <param name="entries">The entries to merge.</param>
-        public void MergeCalendarEntries(IEnumerable<CalendarEntry> entries)
+        /// <param name="olItem">The outlook item to update.</param>
+        /// <param name="entry">The calendar entry to read updated information from.</param>
+        private void UpdateEntry(AppointmentItem olItem, CalendarEntry entry)
+        {
+            olItem.StartTimeZone = outlookApp.TimeZones[entry.StartTimeZone.Id];
+            olItem.EndTimeZone = outlookApp.TimeZones[entry.EndTimeZone.Id];
+            olItem.Subject = entry.Subject;
+            olItem.Body = entry.Body;
+            olItem.Location = entry.Location;
+            foreach (Recipient rcp in olItem.Recipients)
+                rcp.Delete();
+            foreach (var name in entry.Participants)
+                olItem.Recipients.Add(name);
+            olItem.OptionalAttendees = String.Join(", ", entry.OptionalParticipants.ToArray());
+            olItem.Start = TimeZoneInfo.ConvertTimeFromUtc(entry.StartTime, TimeZoneInfo.Local);
+            olItem.End = TimeZoneInfo.ConvertTimeFromUtc(entry.EndTime, TimeZoneInfo.Local);
+            olItem.UnRead = false;
+            olItem.ReminderOverrideDefault = true;
+            olItem.ReminderSet = false;
+            olItem.Save();                    
+        }
+
+        public void RemoveCalendarEntries(IEnumerable<CalendarEntry> oldEntries)
         {
             var calendarFolder = GetCalendarFolder();
-            foreach (var entry in entries)
+            foreach (var entry in oldEntries)
             {
                 try
                 {
-                    AppointmentItem olItem = GetAppointmentItem(entry.OutlookID, calendarFolder);
-                    olItem.StartTimeZone = outlookApp.TimeZones[entry.StartTimeZone.Id];
-                    olItem.EndTimeZone = outlookApp.TimeZones[entry.EndTimeZone.Id];
-                    olItem.Subject = entry.Subject;
-                    olItem.Body = entry.Body;
-                    olItem.Location = entry.Location;
-                    
-                    foreach (var name in entry.Participants)
-                        olItem.Recipients.Add(name);
-                    olItem.OptionalAttendees = String.Join(", ", entry.OptionalParticipants.ToArray());
-                    olItem.Start = TimeZoneInfo.ConvertTimeFromUtc(entry.StartTime, TimeZoneInfo.Local);
-                    olItem.End = TimeZoneInfo.ConvertTimeFromUtc(entry.EndTime, TimeZoneInfo.Local);
-                    olItem.UnRead = false;
-                    olItem.ReminderOverrideDefault = true;
-                    olItem.ReminderSet = false;
+                    var olItem = GetExistingAppointmentItem(entry.OutlookID, calendarFolder);
+                    olItem.Delete();
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.WriteLine("Failed to remove outlook entry: " + entry.Subject + ex.Message + Environment.NewLine + "----------------");
+                }
+            }
+        }
+
+        public void MergeCalendarEntries(IEnumerable<CalendarEntry> changedEntries)
+        {
+            var calendarFolder = GetCalendarFolder();
+            foreach (var entry in changedEntries)
+            {
+                try
+                {
+                    AppointmentItem olItem = GetExistingAppointmentItem(entry.OutlookID, calendarFolder);
+                    UpdateEntry(olItem, entry);                    
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.WriteLine("Failed to update existing entry: " + entry.Subject + ex.Message + Environment.NewLine + "----------------");
+                }
+            }
+        }
+
+        public void AddCalendarEntries(IEnumerable<CalendarEntry> newEntries)
+        {
+            var calendarFolder = GetCalendarFolder();
+            foreach (var entry in newEntries)
+            {
+                try
+                {
+                    var olItem = (AppointmentItem)calendarFolder.Items.Add(OlItemType.olAppointmentItem);
+                    UpdateEntry(olItem, entry);
                     olItem.Save();
                     entry.OutlookID = olItem.GlobalAppointmentID;
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.WriteLine("Failed to handle entry: " + entry + ex.Message + Environment.NewLine + "----------------");
+                    Debug.WriteLine("Failed to add new entry: " + entry.Subject + ex.Message + Environment.NewLine + "----------------");
                 }
             }
         }

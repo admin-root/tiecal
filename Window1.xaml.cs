@@ -77,6 +77,9 @@ namespace TieCal
         {
             if (settings.NotesPassword != null && settings.NotesPassword.Length > 0)
                 RefreshNotesDatabases();
+            else
+                expSettings.IsExpanded = true;
+            DryRun = settings.DryRun;
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -137,6 +140,7 @@ namespace TieCal
         {
             try
             {
+                // TODO: This should probably move to MergeWindow or a separate class
                 txtStatusMessage.Text = "Processing Calendar Entries...";
                 if (fetchFailed)
                     return;
@@ -174,7 +178,12 @@ namespace TieCal
                 bool doMerge = (mergeWin.ShowDialog() == true);
                 if (doMerge && !DryRun)
                 {
-                    _outlookManager.MergeCalendarEntries(entriesToMerge);
+                    _outlookManager.RemoveCalendarEntries(oldEntries);
+                    List<CalendarEntry> changedEntries2 = new List<CalendarEntry>();
+                    foreach (var chg in changedEntries)
+                        changedEntries2.Add(chg.Entry);
+                    _outlookManager.MergeCalendarEntries(changedEntries2);
+                    _outlookManager.AddCalendarEntries(newEntries);
                     mapping.AddRange(entriesToMerge);
                     mapping.Save();
                 }
