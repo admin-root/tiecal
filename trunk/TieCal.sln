@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TieCal", "TieCal.csproj", "{7CF3A378-EF31-4C91-9945-9F5B5C499A3C}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TieCal Installation", "TieCal Installation\TieCal Installation.vdproj", "{44FB3D9F-C16C-4073-8F8B-6680218E5D36}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -17,6 +19,9 @@ Global
 		{7CF3A378-EF31-4C91-9945-9F5B5C499A3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CF3A378-EF31-4C91-9945-9F5B5C499A3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CF3A378-EF31-4C91-9945-9F5B5C499A3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44FB3D9F-C16C-4073-8F8B-6680218E5D36}.Debug|Any CPU.ActiveCfg = Debug
+		{44FB3D9F-C16C-4073-8F8B-6680218E5D36}.Release|Any CPU.ActiveCfg = Release
+		{44FB3D9F-C16C-4073-8F8B-6680218E5D36}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
