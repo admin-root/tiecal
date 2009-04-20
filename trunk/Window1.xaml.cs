@@ -84,6 +84,7 @@ namespace TieCal
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            settings.DryRun = DryRun;
             settings.Save();
             base.OnClosing(e);
         }

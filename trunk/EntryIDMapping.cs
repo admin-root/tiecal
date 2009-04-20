@@ -189,10 +189,11 @@ namespace TieCal
             var outlookIDsToRemove = from id in KnownOutlookIDs
                                      where !(from entry in outlookEntries select entry.OutlookID).Contains(id)
                                      select id;
-
-            foreach (string id in notesIDsToRemove)
+            List<string> notesIds = new List<string>(notesIDsToRemove.AsEnumerable());
+            List<string> outlookIds = new List<string>(outlookIDsToRemove.AsEnumerable());
+            foreach (string id in notesIds)
                 RemoveNotesID(id);
-            foreach (string id in outlookIDsToRemove)
+            foreach (string id in outlookIds)
                 RemoveOutlookID(id);
         }
     }
