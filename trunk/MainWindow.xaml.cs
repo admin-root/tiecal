@@ -17,30 +17,30 @@ using System.Windows.Shapes;
 namespace TieCal
 {
     /// <summary>
-    /// Interaction logic for Window1.xaml
+    /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class Window1 : Window
+    public partial class MainWindow : Window
     {
         #region Dependency Properties
 
         /// <summary>
-        /// Gets or sets a value indicating whether this instance is busy working with calendar synchronization.
+        /// Gets or sets a value indicating whether this instance is busy working with calendar synchronization. This is a dependency property.
         /// </summary>
-        public bool IsWorking
+        [Description("Gets or sets a value indicating whether this instance is busy working with calendar synchronization.")]
+        public bool IsSynchronizing
         {
-            get { return (bool)GetValue(IsWorkingProperty); }
-            set { SetValue(IsWorkingProperty, value); }
+            get { return (bool)GetValue(IsSynchronizingProperty); }
+            set { SetValue(IsSynchronizingProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for IsWorking.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty IsWorkingProperty =
-            DependencyProperty.Register("IsWorking", typeof(bool), typeof(Window1), new UIPropertyMetadata(false));
-
-
+        public static readonly DependencyProperty IsSynchronizingProperty =
+            DependencyProperty.Register("IsSynchronizing", typeof(bool), typeof(MainWindow), new UIPropertyMetadata(false, new PropertyChangedCallback(IsSynchronizingProperty_Changed)));
 
         /// <summary>
-        /// Gets or sets a value indicating whether to run in simulation mode (no changes written to any calendar).
+        /// Gets or sets a value indicating whether to run in simulation mode (no changes written to any calendar). This is a dependency property.
         /// </summary>
+        [Description("Gets or sets a value indicating whether to run in simulation mode (no changes written to any calendar).")]
         public bool DryRun
         {
             get { return (bool)GetValue(DryRunProperty); }
@@ -49,16 +49,48 @@ namespace TieCal
 
         // Using a DependencyProperty as the backing store for DryRun.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty DryRunProperty =
-            DependencyProperty.Register("DryRun", typeof(bool), typeof(Window1), new UIPropertyMetadata(false));
+            DependencyProperty.Register("DryRun", typeof(bool), typeof(MainWindow), new UIPropertyMetadata(false));
 
 
         #endregion
+        #region Routed Events
+        public static RoutedEvent SynchronizationStartedEvent = EventManager.RegisterRoutedEvent("SynchronizationStarted", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(MainWindow));
+        public static RoutedEvent SynchronizationEndedEvent = EventManager.RegisterRoutedEvent("SynchronizationEnded", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(MainWindow));
+        /// <summary>
+        /// Occurs when synchronization is started.
+        /// </summary>
+        [Description("Occurs when synchronization is started.")]
+        public event RoutedEventHandler SynchronizationStarted
+        {
+            add { AddHandler(SynchronizationStartedEvent, value); }
+            remove { RemoveHandler(SynchronizationStartedEvent, value); }
+        }
+        /// <summary>
+        /// Occurs when synchronization has ended.
+        /// </summary>
+        [Description("Occurs when synchronization has ended.")]
+        public event RoutedEventHandler SynchronizationEnded
+        {
+            add { AddHandler(SynchronizationEndedEvent, value); }
+            remove { RemoveHandler(SynchronizationEndedEvent, value); }
+        }
+        #endregion
+
+        public static void IsSynchronizingProperty_Changed(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            MainWindow syncWindow = (MainWindow)sender;
+
+            if ((bool)e.NewValue)
+                syncWindow.RaiseEvent(new RoutedEventArgs(SynchronizationStartedEvent));
+            else
+                syncWindow.RaiseEvent(new RoutedEventArgs(SynchronizationEndedEvent));
+        }
 
         private NotesReader _notesReader;
         private OutlookManager _outlookManager;
         private ProgramSettings settings;
         
-        public Window1()
+        public MainWindow()
         {
             InitializeComponent();
             settings = ProgramSettings.LoadSettings();
@@ -70,10 +102,10 @@ namespace TieCal
             _outlookManager.FetchCalendarWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(outlookworker_RunWorkerCompleted);
             _outlookManager.FetchCalendarWorker.ProgressChanged += new ProgressChangedEventHandler(outlookworker_ProgressChanged);
 
-            this.Loaded += new RoutedEventHandler(Window1_Loaded);
+            this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
 
-        void Window1_Loaded(object sender, RoutedEventArgs e)
+        void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             if (settings.NotesPassword != null && settings.NotesPassword.Length > 0)
                 RefreshNotesDatabases();
@@ -91,7 +123,7 @@ namespace TieCal
 
         private void BeginFetchCalendarEntries()
         {
-            IsWorking = true;
+            IsSynchronizing = true;
             txtStatusMessage.Text = "Reading calendars";
             _notesReader.BeginFetchCalendarEntries();
             _outlookManager.BeginFetchCalendarEntries();
@@ -196,7 +228,7 @@ namespace TieCal
             finally
             {
                 txtStatusMessage.Text = "All Done";
-                IsWorking = false;
+                IsSynchronizing = false;
             }
         }
         private void RefreshNotesDatabases()
