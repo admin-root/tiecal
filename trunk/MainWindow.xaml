@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     x:Class="TieCal.MainWindow"
     Title="TieCal Synchronizer" x:Name="window" 
-    xmlns:local="clr-namespace:TieCal" Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" Width="500" Height="400">
+    xmlns:local="clr-namespace:TieCal" Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" Width="500" Height="400" Icon="Images\tiecal.ico">
 	<Window.Resources>
 		<local:BoolToOppositeBoolConverter x:Key="BoolToOppositeBoolConverter"/>
 		<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>

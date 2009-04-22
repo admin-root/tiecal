@@ -2,7 +2,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:TieCal"
-    Title="MergeWindow" Height="600" Width="403">
+    Title="MergeWindow" Height="600" Width="500" Icon="Images\tiecal.ico">
     <Window.Resources>
         <DataTemplate x:Key="CalEntryItemTemplate">
             <Border BorderThickness="0,0,0,1" BorderBrush="#FF00451B" Padding="2" Margin="0,0,0,4">
@@ -55,36 +55,42 @@
             <RowDefinition Height="0.3*"/>
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <DockPanel Margin="4">
-        	<DockPanel.Background>
-        		<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-        			<GradientStop Color="#FFDBFCB9" Offset="0"/>
-        			<GradientStop Color="#FFFFFFFF" Offset="1"/>
-        		</LinearGradientBrush>
-        	</DockPanel.Background>
-    		<TextBlock DockPanel.Dock="Top" Text="New Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries are new in Lotus Notes and doesn't exist in Outlook" Margin="3,3,8,3"/>
-        	<ListBox DockPanel.Dock="Top" x:Name="lstNewEntries" ToolTip="New Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
-    	</DockPanel>
-        <DockPanel Grid.Row="1" Margin="4">
-        	<DockPanel.Background>
-        		<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-        			<GradientStop Color="#FFECEC8B" Offset="0"/>
-        			<GradientStop Color="#FFFFFFFF" Offset="1"/>
-        		</LinearGradientBrush>
-        	</DockPanel.Background>
-        	<TextBlock DockPanel.Dock="Top" Text="Modified Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries exists in Outlook but has been modified in Lotus Notes" Margin="3,3,8,3"/>
-        	<ListBox DockPanel.Dock="Top" x:Name="lstModifiedEntries" ToolTip="Modified Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryDiffItemTemplate}" />
-        </DockPanel>
-        <DockPanel Grid.Row="2" Margin="4">
-        	<DockPanel.Background>
-        		<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-        			<GradientStop Color="#FFECB7A0" Offset="0"/>
-        			<GradientStop Color="#FFFFFFFF" Offset="1"/>
-        		</LinearGradientBrush>
-        	</DockPanel.Background>
-        	<TextBlock DockPanel.Dock="Top" Text="Old Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries exist in Outlook but are too old and will be removed" Margin="3,3,8,3"/>
-        	<ListBox DockPanel.Dock="Top" x:Name="lstOldEntries" ToolTip="Old Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
-        </DockPanel>
+        <Border Margin="4,4,4,4" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF2C8E1F">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FFDBFCB9" Offset="0"/>
+                    <GradientStop Color="#FFFFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+    		<DockPanel>
+    			<TextBlock DockPanel.Dock="Top" Text="New Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries are new in Lotus Notes and doesn't exist in Outlook" Margin="3,3,8,3"/>
+    			<ListBox DockPanel.Dock="Top" x:Name="lstNewEntries" ToolTip="New Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
+    		</DockPanel>
+    	</Border>
+        <Border Margin="4,4,4,4" Grid.Row="1" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF9D6400">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FFECEC8B" Offset="0"/>
+                    <GradientStop Color="#FFFFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        	<DockPanel>
+        		<TextBlock DockPanel.Dock="Top" Text="Modified Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries exists in Outlook but has been modified in Lotus Notes" Margin="3,3,8,3"/>
+        		<ListBox DockPanel.Dock="Top" x:Name="lstModifiedEntries" ToolTip="Modified Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryDiffItemTemplate}" />
+        	</DockPanel>
+        </Border>
+        <Border Margin="4,4,4,4" Grid.Row="2" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF7A0000">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FFECB7A0" Offset="0"/>
+                    <GradientStop Color="#FFFFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        	<DockPanel>
+        		<TextBlock DockPanel.Dock="Top" Text="Old Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries exist in Outlook but are too old and will be removed" Margin="3,3,8,3"/>
+        		<ListBox DockPanel.Dock="Top" x:Name="lstOldEntries" ToolTip="Old Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
+        	</DockPanel>
+        </Border>
         <UniformGrid HorizontalAlignment="Right" Grid.Row="3" VerticalAlignment="Center" Rows="1" Margin="0,8,8,8">
         	<Button Content="Cancel" x:Name="btnCancel" Click="btnCancel_Click" Margin="4" />
         	<Button Content="Merge Entries" x:Name="btnMerge" Click="btnMerge_Click" Margin="4" />

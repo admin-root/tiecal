@@ -19,6 +19,10 @@ namespace TieCal
     /// </summary>
     public partial class MergeWindow : Window
     {
+        public MergeWindow()
+        {
+            InitializeComponent();
+        }
         public MergeWindow(IEnumerable<CalendarEntry> newEntries, IEnumerable changedEntries, IEnumerable<CalendarEntry> oldEntries)
         {
             InitializeComponent();
