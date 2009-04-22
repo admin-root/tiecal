@@ -95,7 +95,6 @@ namespace TieCal
                 }
                 else if (item.Name == "EndTimeZone")
                 {
-                    Debug.WriteLine("EndTZ:   " + item.Text);
                     endTZOffset = GetTimeZoneDiff(item);
                 }
                 else if (item.Name == "LocalTimeZone")
@@ -105,8 +104,6 @@ namespace TieCal
                 else if (item.Name.Contains("TimeZone"))
                     Debugger.Break();
             }
-            //Debug.Assert(dateItems.ContainsKey("StartTime") && dateItems.ContainsKey("StartDate"));
-            //Debug.Assert(dateItems.ContainsKey("EndTime") && dateItems.ContainsKey("EndDate"));
             if (stringItems.ContainsKey("Body"))
                 newEntry.Body = stringItems["Body"];
 
