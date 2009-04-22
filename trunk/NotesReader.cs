@@ -67,6 +67,7 @@ namespace TieCal
             Dictionary<string, string> stringItems = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             Dictionary<string, DateTime> dateItems = new Dictionary<string, DateTime>(StringComparer.InvariantCultureIgnoreCase);
             var items = (object[])notesEntry.Document.Items;
+            
             for (int i = 0; i < items.Length; i++)
             {
                 NotesItem item = (NotesItem)items[i];
@@ -111,7 +112,6 @@ namespace TieCal
                 newEntry.Subject = stringItems["Subject"];
             else
                 newEntry.Subject = "(no subject)";
-
             if (stringItems.ContainsKey("Location"))
                 newEntry.Location = stringItems["Location"];
             if (stringItems.ContainsKey("Room"))
@@ -163,6 +163,8 @@ namespace TieCal
             // Notes stores timezone offset in the inverted form (e.g. CET would be -1, instead of +1)
             newEntry.SetEndTimeZoneFromOffset(TimeSpan.FromTicks(endTZOffset.Ticks * -1));
             newEntry.SetStartTimeZoneFromOffset(TimeSpan.FromTicks(startTZOffset.Ticks * -1));
+            if (newEntry.Subject.Contains("test-"))
+                Debugger.Break();
             Debug.Assert(newEntry.Occurrences.Count > 0);
             Debug.Assert(newEntry.NotesID != null && newEntry.NotesID.Length > 0);
 
@@ -272,7 +274,9 @@ namespace TieCal
             {
                 var session = CreateNotesSession();
                 var db = session.GetDatabase("", DatabaseFile, false);
+                
                 NotesView view = db.GetView("Calendar");
+                
                 var entries = view.AllEntries;
                 List<string> completedIds = new List<string>();
                 for (int row = 0; row < entries.Count; row++)

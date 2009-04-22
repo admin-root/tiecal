@@ -51,6 +51,21 @@ namespace TieCal
         public static readonly DependencyProperty DryRunProperty =
             DependencyProperty.Register("DryRun", typeof(bool), typeof(MainWindow), new UIPropertyMetadata(false));
 
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is ready to synchronize the calendars.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is ready to synchronize; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsReadyToSynchronize
+        {
+            get { return (bool)GetValue(IsReadyToSynchronizeProperty); }
+            set { SetValue(IsReadyToSynchronizeProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for IsReadyToSynchronize.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty IsReadyToSynchronizeProperty =
+            DependencyProperty.Register("IsReadyToSynchronize", typeof(bool), typeof(MainWindow), new UIPropertyMetadata(false, new PropertyChangedCallback(IsReadyToSynchronizeProperty_Changed)));
 
         #endregion
         #region Routed Events
@@ -85,7 +100,20 @@ namespace TieCal
             else
                 syncWindow.RaiseEvent(new RoutedEventArgs(SynchronizationEndedEvent));
         }
-
+        private static void IsReadyToSynchronizeProperty_Changed(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            MainWindow syncWindow = (MainWindow)sender;
+            if ((bool)e.NewValue)
+            {
+                syncWindow.txtWelcomeText.Text = "You are ready to start synchronizing your calendar. Click \"Synchronize\" to start the synchronization";
+                syncWindow.imgOverlay.Source = new BitmapImage(new Uri("pack://application:,,,/Images/Apply64.png"));
+            }
+            else
+            {
+                syncWindow.txtWelcomeText.Text = "Before you can start synchronizing, you must enter your notes password and select the database which contains the calendar entries";
+                syncWindow.imgOverlay.Source = new BitmapImage(new Uri("pack://application:,,,/Images/Fail64.png"));
+            }
+        }
         private NotesReader _notesReader;
         private OutlookManager _outlookManager;
         private ProgramSettings settings;
@@ -112,13 +140,24 @@ namespace TieCal
             else
                 expSettings.IsExpanded = true;
             DryRun = settings.DryRun;
+            UpdateIsReadyState();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
             settings.DryRun = DryRun;
+            settings.NotesDatabase = (string)cmbNotesDB.SelectedItem;
+            settings.NotesPassword = txtNotesPassword.Password;
             settings.Save();
             base.OnClosing(e);
+        }
+
+        private void UpdateIsReadyState()
+        {
+            if (String.IsNullOrEmpty(settings.NotesDatabase) || String.IsNullOrEmpty(settings.NotesPassword))
+                IsReadyToSynchronize = false;
+            else
+                IsReadyToSynchronize = true;
         }
 
         private void BeginFetchCalendarEntries()
@@ -258,6 +297,7 @@ namespace TieCal
         private void txtNotesPassword_PasswordChanged(object sender, RoutedEventArgs e)
         {
             settings.NotesPassword = txtNotesPassword.Password;
+            UpdateIsReadyState();
         }
 
         private void btnRefreshNotesDB_Click(object sender, RoutedEventArgs e)
@@ -268,6 +308,7 @@ namespace TieCal
         private void cmbNotesDB_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             settings.NotesDatabase = (string) cmbNotesDB.SelectedItem;
+            UpdateIsReadyState();
         }
     }
 

@@ -84,7 +84,7 @@
 		</Expander>
 		<StackPanel x:Name="pnlActionButtons" Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" Margin="8,8,8,8">
 			<CheckBox Content="Dry Run (don't write changes to Outlook)" IsChecked="{Binding Path=DryRun, ElementName=window}" VerticalAlignment="Center" Margin="0,0,24,0" />
-			<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click"/>
+			<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}"/>
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8">
 			<Border x:Name="progressBorder" BorderBrush="#FF7A4E00" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" Padding="3,3,3,3" Visibility="Collapsed">
@@ -132,9 +132,10 @@
 						<ColumnDefinition Width="Auto"/>
 						<ColumnDefinition Width="*"/>
 					</Grid.ColumnDefinitions>
-					<Image Source="Images\Star.png" Width="128" Height="128" Grid.RowSpan="2"/>
-					<TextBlock FontSize="16" FontWeight="Bold" Text="Welcome to TieCal " TextWrapping="Wrap" Grid.Column="1"/>
-					<TextBlock d:LayoutOverrides="Width" VerticalAlignment="Top" Text="You are ready to start synchronizing your calendar. Click &quot;Synchronize&quot; to start the synchronization" TextWrapping="Wrap" Grid.Column="1" Grid.Row="1"/>
+					<Image Source="Images\Star.png" Width="128" Height="128" Grid.RowSpan="2" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+					<TextBlock FontSize="16" FontWeight="Bold" Text="Welcome to TieCal " TextWrapping="Wrap" Grid.Column="1" Margin="8,0,0,0"/>
+					<TextBlock d:LayoutOverrides="Width" VerticalAlignment="Top" Text="Before you can start synchronizing, you must enter your notes password and select the database which contains the calendar entries" TextWrapping="Wrap" Grid.Column="1" Grid.Row="1" Margin="12,8,0,0" x:Name="txtWelcomeText"/>
+					<Image VerticalAlignment="Top" HorizontalAlignment="Left" Width="64" Height="64" Margin="64,64,0,0" Grid.RowSpan="3" Source="Images\Fail64.png" x:Name="imgOverlay" />
 				</Grid>
 			</Border>
 		</StackPanel>
