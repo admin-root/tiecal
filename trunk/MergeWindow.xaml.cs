@@ -23,6 +23,7 @@ namespace TieCal
         {
             InitializeComponent();
         }
+
         public MergeWindow(IEnumerable<CalendarEntry> newEntries, IEnumerable changedEntries, IEnumerable<CalendarEntry> oldEntries)
         {
             InitializeComponent();

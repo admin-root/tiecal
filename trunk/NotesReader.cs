@@ -163,8 +163,8 @@ namespace TieCal
             // Notes stores timezone offset in the inverted form (e.g. CET would be -1, instead of +1)
             newEntry.SetEndTimeZoneFromOffset(TimeSpan.FromTicks(endTZOffset.Ticks * -1));
             newEntry.SetStartTimeZoneFromOffset(TimeSpan.FromTicks(startTZOffset.Ticks * -1));
-            if (newEntry.Subject.Contains("test-"))
-                Debugger.Break();
+            //if (newEntry.Subject.Contains("test-"))
+            //    Debugger.Break();
             Debug.Assert(newEntry.Occurrences.Count > 0);
             Debug.Assert(newEntry.NotesID != null && newEntry.NotesID.Length > 0);
 
