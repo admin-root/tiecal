@@ -226,8 +226,7 @@ namespace TieCal
                 var lowerLimit = DateTime.Now - TimeSpan.FromDays(30);
                 var upperLimit = DateTime.Now + TimeSpan.FromDays(30);
                 var entriesToMerge = from calEntry in _notesReader.CalendarEntries
-                                     where calEntry.IsRepeating == false &&
-                                     calEntry.StartTime > lowerLimit && calEntry.EndTime < upperLimit
+                                     where calEntry.OccursInInterval(lowerLimit, upperLimit)
                                      select calEntry;
                 
                 foreach (var calEntry in entriesToMerge)

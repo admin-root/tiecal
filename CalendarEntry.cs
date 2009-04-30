@@ -153,6 +153,19 @@ namespace TieCal
         /// <value>The end time, in UTC.</value>
         public DateTime EndTime { get { return _endTime; } set { _endTime = value; } }
 
+        /// <summary>
+        /// Gets a value indicating whether this calendar entry occurs in the specified interval.
+        /// </summary>
+        /// <param name="start">The start.</param>
+        /// <param name="end">The end.</param>
+        /// <returns></returns>
+        public bool OccursInInterval(DateTime start, DateTime end)
+        {
+            foreach (var occurrence in Occurrences)
+                if (occurrence > start && occurrence < end)
+                    return true;
+            return false;
+        }
 
         /// <summary>
         /// Determines whether the this calendar entry is equivalents to the specified calendar entry for the sake of merging.
@@ -222,6 +235,127 @@ namespace TieCal
                 sb.AppendLine(" Number of repeats: " + Occurrences.Count);
             
             return sb.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Analyzer for a list of <see cref="DateTime"/> objects which tries to find a pattern that can be applied when creating/updating outlook entries
+    /// </summary>
+    public class RepeatPatternAnalyzer
+    {
+        private IList<DateTime> Occurrences { get; set; }
+        public RepeatPatternAnalyzer(IList<DateTime> occurrences)
+        {
+            if (occurrences.Count < 2)
+                throw new ArgumentException("Cannot calculate repeat pattern unless there's at least two occurrences", "occurrences");
+            Occurrences = occurrences;
+            SameMinute = true;
+            SameHour = true;
+            SameDayOfMonth = true;
+            SameDayOfWeek = true;
+            SameMonth = true;
+
+            for (int i = 1; i < occurrences.Count; i++)
+            {
+                var prev = occurrences[i - 1];
+                var cur = occurrences[i];
+                if (cur.Minute != prev.Minute)
+                    SameMinute = false;
+                if (cur.Hour != prev.Hour)
+                    SameHour = false;
+                if (cur.DayOfWeek != prev.DayOfWeek)
+                    SameDayOfWeek = false;
+                if (cur.Day != prev.Day)
+                    SameDayOfMonth = false;
+                if (cur.Month != prev.Month)
+                    SameMonth = false;
+            }
+            
+            if (!IsValid)
+                throw new ArgumentException ("The occurrences does not map to a valid repeat pattern", "occurrences");
+        }
+
+        /// <summary>
+        /// Gets the interval between repeats. The unit depends on the IsDaily, IsWeekly etc. properties
+        /// </summary>
+        public int Interval { get { return 1; } }
+
+        /// <summary>
+        /// Gets a value indicating whether this instance is valid, i.e. the occurrences were mapped to something that makes sense.
+        /// </summary>
+        private bool IsValid
+        {
+            get
+            {
+                if (!(SameMinute || SameHour || SameDayOfMonth || SameDayOfWeek || SameMonth))
+                    // No pattern was found
+                    return false;
+                if (!IsDaily && !IsWeekly && !IsMonthly && !IsYearly)
+                    return false;
+                // TODO: Maybe also make sure it's only one of the above
+                return true;
+            }
+        }
+        public int NumRepeats { get { return Occurrences.Count; } }
+        public bool SameMinute { get; private set; }
+        public bool SameHour { get; private set; }
+        public bool SameTime { get { return SameMinute && SameHour; } }
+        public bool SameDayOfMonth { get; private set; }
+        public bool SameDayOfWeek { get; private set; }
+        public bool SameMonth { get; private set; }
+
+        public bool IsYearly
+        {
+            get
+            {
+                if (!SameTime)
+                    return false;
+                if (!SameMonth && !SameDayOfMonth)
+                    return false;
+                
+                return true;
+            }
+        }
+
+        public bool IsMonthly
+        {
+            get
+            {
+                if (!SameTime)
+                    return false;
+                if (!SameDayOfMonth)
+                    return false;
+                if (SameMonth)
+                    return false;
+                return true;
+            }
+        }
+        public bool IsWeekly
+        {
+            get
+            {
+                if (!SameTime)
+                    return false;
+                if (!SameDayOfWeek)
+                    return false;
+                return true;
+            }
+        }
+
+        public bool IsDaily
+        {
+            get
+            {
+                if (!SameTime)
+                    return false;
+                if (SameDayOfWeek || SameDayOfMonth)
+                    return false;
+                if (SameMonth)
+                    return false;
+
+                return true;
+            }
+
         }
     }
 }

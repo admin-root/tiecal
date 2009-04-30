@@ -78,7 +78,60 @@ namespace TieCal
 
             return (AppointmentItem)calendarFolder.Items.Add(OlItemType.olAppointmentItem);
         }
-
+        private void UpdateRecurrencePattern(AppointmentItem olItem, IList<DateTime> occurences)
+        {
+            if (occurences.Count == 1)
+                return;
+            var analyzer = new RepeatPatternAnalyzer(occurences);
+            RecurrencePattern pattern = olItem.GetRecurrencePattern();
+            if (analyzer.IsDaily)
+                pattern.RecurrenceType = OlRecurrenceType.olRecursDaily;
+            else if (analyzer.IsWeekly)
+            {
+                pattern.RecurrenceType = OlRecurrenceType.olRecursWeekly;
+                switch (occurences[0].DayOfWeek)
+                {
+                    case DayOfWeek.Friday:
+                        pattern.DayOfWeekMask = OlDaysOfWeek.olFriday;
+                        break;
+                    case DayOfWeek.Monday:
+                        pattern.DayOfWeekMask = OlDaysOfWeek.olMonday;
+                        break;
+                    case DayOfWeek.Saturday:
+                        pattern.DayOfWeekMask = OlDaysOfWeek.olSaturday;
+                        break;
+                    case DayOfWeek.Sunday:
+                        pattern.DayOfWeekMask = OlDaysOfWeek.olSunday;
+                        break;
+                    case DayOfWeek.Thursday:
+                        pattern.DayOfWeekMask = OlDaysOfWeek.olThursday;
+                        break;
+                    case DayOfWeek.Tuesday:
+                        pattern.DayOfWeekMask = OlDaysOfWeek.olTuesday;
+                        break;
+                    case DayOfWeek.Wednesday:
+                        pattern.DayOfWeekMask = OlDaysOfWeek.olWednesday;
+                        break;
+                    default:
+                        Debugger.Break();
+                        break;
+                }
+            }
+            else if (analyzer.IsMonthly)
+            {
+                pattern.RecurrenceType = OlRecurrenceType.olRecursMonthly;
+                pattern.DayOfMonth = occurences[0].Day;
+            }
+            else if (analyzer.IsYearly)
+            {
+                pattern.RecurrenceType = OlRecurrenceType.olRecursYearly;
+                pattern.DayOfMonth = occurences[0].Day;
+                pattern.MonthOfYear = occurences[0].Month;
+            }
+            pattern.Interval = analyzer.Interval;
+            pattern.StartTime = occurences[0];
+            pattern.EndTime = occurences[occurences.Count - 1];
+        }
         /// <summary>
         /// Updates the specified appointmentitem with data from the provided CalendarEntry.
         /// </summary>
@@ -91,6 +144,7 @@ namespace TieCal
             olItem.Subject = entry.Subject;
             olItem.Body = entry.Body;
             olItem.Location = entry.Location;
+            
             foreach (Recipient rcp in olItem.Recipients)
                 rcp.Delete();
             foreach (var name in entry.Participants)
@@ -101,7 +155,12 @@ namespace TieCal
             olItem.UnRead = false;
             olItem.ReminderOverrideDefault = true;
             olItem.ReminderSet = false;
-            olItem.Save();                    
+            
+            //UpdateRecurrencePattern(olItem, entry.Occurrences);
+            if (!entry.IsRepeating)
+            {
+                olItem.Save();
+            }
         }
 
         public void RemoveCalendarEntries(IEnumerable<CalendarEntry> oldEntries)
@@ -147,7 +206,6 @@ namespace TieCal
                 {
                     var olItem = (AppointmentItem)calendarFolder.Items.Add(OlItemType.olAppointmentItem);
                     UpdateEntry(olItem, entry);
-                    olItem.Save();
                     entry.OutlookID = olItem.GlobalAppointmentID;
                 }
                 catch (System.Exception ex)
