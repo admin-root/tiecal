@@ -128,6 +128,8 @@ namespace TieCal
                 pattern.DayOfMonth = occurences[0].Day;
                 pattern.MonthOfYear = occurences[0].Month;
             }
+            else
+                return;
             pattern.Interval = analyzer.Interval;
             pattern.StartTime = occurences[0];
             pattern.EndTime = occurences[occurences.Count - 1];
