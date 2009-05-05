@@ -179,8 +179,8 @@ namespace TieCal
         /// <summary>
         /// Removes all mapping information that is no longer available in the two specified collection of entries
         /// </summary>
-        /// <param name="notesEntries">The notes entries.</param>
-        /// <param name="outlookEntries">The outlook entries.</param>
+        /// <param name="notesEntries">The notes entries to keep.</param>
+        /// <param name="outlookEntries">The outlook entries to keep.</param>
         public void Cleanup(IEnumerable<CalendarEntry> notesEntries, IEnumerable<CalendarEntry> outlookEntries)
         {
             if (notesEntries != null && notesEntries.Count() > 0)
@@ -192,6 +192,8 @@ namespace TieCal
                 foreach (string id in notesIds)
                     RemoveNotesID(id);
             }
+            else
+                Clear();
             if (outlookEntries != null && outlookEntries.Count() > 0)
             {
                 var outlookIDsToRemove = from id in KnownOutlookIDs
@@ -201,6 +203,8 @@ namespace TieCal
                 foreach (string id in outlookIds)
                     RemoveOutlookID(id);
             }
+            else
+                Clear();
         }
     }
 }

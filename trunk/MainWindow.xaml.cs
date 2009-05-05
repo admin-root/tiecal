@@ -236,26 +236,27 @@ namespace TieCal
 
                 var newEntries = from notesEntry in entriesToMerge
                                  where !(from outlookEntry in _outlookManager.CalendarEntries select outlookEntry.NotesID).Contains(notesEntry.NotesID)
-                                 select notesEntry;
+                                 select new ModifiedEntry(notesEntry, Modification.New);
                 var changedEntries = from notesEntry in entriesToMerge
                                      join outlookEntry in _outlookManager.CalendarEntries on notesEntry.OutlookID equals outlookEntry.OutlookID
                                      where notesEntry.OutlookID == outlookEntry.OutlookID && notesEntry.DiffersFrom(outlookEntry)
-                                     select new { Entry = notesEntry, Differences = notesEntry.GetDifferences(outlookEntry) };
+                                     select new ModifiedEntry(notesEntry, Modification.Modified, notesEntry.GetDifferences(outlookEntry));
 
                 var oldEntries = from outlookEntry in _outlookManager.CalendarEntries
                                  where !(from notesEntry in entriesToMerge select notesEntry.OutlookID).Contains(outlookEntry.OutlookID)
-                                 select outlookEntry;
-                MergeWindow mergeWin = new MergeWindow(newEntries, changedEntries, oldEntries);
+                                 select new ModifiedEntry(outlookEntry, Modification.Removed);
+                List<ModifiedEntry> entries = new List<ModifiedEntry>(newEntries.Count() + changedEntries.Count() + oldEntries.Count());
+                entries.AddRange(newEntries);
+                entries.AddRange(changedEntries);
+                entries.AddRange(oldEntries);
+                MergeWindow mergeWin = new MergeWindow(entries);
                 bool doMerge = (mergeWin.ShowDialog() == true);
                 if (doMerge && !DryRun)
                 {
-                    _outlookManager.RemoveCalendarEntries(oldEntries);
-                    List<CalendarEntry> changedEntries2 = new List<CalendarEntry>();
-                    foreach (var chg in changedEntries)
-                        changedEntries2.Add(chg.Entry);
-                    _outlookManager.MergeCalendarEntries(changedEntries2);
-                    _outlookManager.AddCalendarEntries(newEntries);
-                    mapping.AddRange(entriesToMerge);
+                    _outlookManager.MergeCalendarEntries(entries);
+                    foreach (var entry in entries)
+                        if (entry.ApplyModification && entry.Entry.OutlookID != null && entry.Entry.NotesID != null)
+                            mapping.AddPair(entry.Entry.NotesID, entry.Entry.OutlookID);
                     mapping.Save();
                 }
             }
