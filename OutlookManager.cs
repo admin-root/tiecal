@@ -157,62 +157,46 @@ namespace TieCal
             olItem.UnRead = false;
             olItem.ReminderOverrideDefault = true;
             olItem.ReminderSet = false;
-            
             //UpdateRecurrencePattern(olItem, entry.Occurrences);
             if (!entry.IsRepeating)
             {
                 olItem.Save();
             }
         }
-
-        public void RemoveCalendarEntries(IEnumerable<CalendarEntry> oldEntries)
+        
+        public void MergeCalendarEntries(IEnumerable<ModifiedEntry> changedEntries)
         {
             var calendarFolder = GetCalendarFolder();
-            foreach (var entry in oldEntries)
+            foreach (var modification in changedEntries)
             {
+                if (modification.ApplyModification == false)
+                    continue;
                 try
                 {
-                    var olItem = GetExistingAppointmentItem(entry.OutlookID, calendarFolder);
-                    olItem.Delete();
+                    if (modification.Modification == Modification.Modified)
+                    {
+                        AppointmentItem olItem = GetExistingAppointmentItem(modification.Entry.OutlookID, calendarFolder);
+                        UpdateEntry(olItem, modification.Entry);
+                    }
+                    else if (modification.Modification == Modification.New)
+                    {
+                        var olItem = (AppointmentItem)calendarFolder.Items.Add(OlItemType.olAppointmentItem);
+                        UpdateEntry(olItem, modification.Entry);
+                        modification.Entry.OutlookID = olItem.GlobalAppointmentID;
+                    }
+                    else if (modification.Modification == Modification.Removed)
+                    {
+                        var olItem = GetExistingAppointmentItem(modification.Entry.OutlookID, calendarFolder);
+                        olItem.Delete();
+                    }
+                    else
+                    {
+                        Debugger.Break();
+                    }
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.WriteLine("Failed to remove outlook entry: " + entry.Subject + ex.Message + Environment.NewLine + "----------------");
-                }
-            }
-        }
-
-        public void MergeCalendarEntries(IEnumerable<CalendarEntry> changedEntries)
-        {
-            var calendarFolder = GetCalendarFolder();
-            foreach (var entry in changedEntries)
-            {
-                try
-                {
-                    AppointmentItem olItem = GetExistingAppointmentItem(entry.OutlookID, calendarFolder);
-                    UpdateEntry(olItem, entry);                    
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.WriteLine("Failed to update existing entry: " + entry.Subject + ex.Message + Environment.NewLine + "----------------");
-                }
-            }
-        }
-
-        public void AddCalendarEntries(IEnumerable<CalendarEntry> newEntries)
-        {
-            var calendarFolder = GetCalendarFolder();
-            foreach (var entry in newEntries)
-            {
-                try
-                {
-                    var olItem = (AppointmentItem)calendarFolder.Items.Add(OlItemType.olAppointmentItem);
-                    UpdateEntry(olItem, entry);
-                    entry.OutlookID = olItem.GlobalAppointmentID;
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.WriteLine("Failed to add new entry: " + entry.Subject + ex.Message + Environment.NewLine + "----------------");
+                    Debug.WriteLine("Failed to merge " + modification.Modification + " entry (" + modification.Entry.Subject + "): " + ex.Message);
                 }
             }
         }

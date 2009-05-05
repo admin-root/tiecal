@@ -4,94 +4,81 @@
     xmlns:local="clr-namespace:TieCal"
     Title="MergeWindow" Height="600" Width="500" Icon="Images\tiecal.ico">
     <Window.Resources>
+        <local:EntryToDurationConverter x:Key="EntryToDurationConverter" />
+        <LinearGradientBrush x:Key="newEntryBrush" EndPoint="1,0.5" StartPoint="0,0.5">
+            <GradientStop Color="#FFDBFCB9" Offset="0"/>
+            <GradientStop Color="#FFFFFFFF" Offset="1"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="modifiedEntryBrush" EndPoint="1,0.5" StartPoint="0,0.5">
+            <GradientStop Color="#FFECEC8B" Offset="0"/>
+            <GradientStop Color="#FFFFFFFF" Offset="1"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="oldEntryBrush" EndPoint="1,0.5" StartPoint="0,0.5">
+            <GradientStop Color="#FFECB7A0" Offset="0"/>
+            <GradientStop Color="#FFFFFFFF" Offset="1"/>
+        </LinearGradientBrush>
+        
         <DataTemplate x:Key="CalEntryItemTemplate">
-            <Border BorderThickness="0,0,0,1" BorderBrush="#FF00451B" Padding="2" Margin="0,0,0,4">
-        		<StackPanel>
-        			<TextBlock Text="{Binding Path=Subject}" FontWeight="Bold" TextWrapping="Wrap" MinWidth="150" />
-        			<TextBlock Text="{Binding Path=Location, Mode=Default}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path=Location, Mode=Default}"/>
-        			<StackPanel Orientation="Horizontal" Margin="4,0,0,0">
-        				<TextBlock Text="Start: " Foreground="#FF606060" Width="50" />
-        				<TextBlock Text="{Binding Path=StartTime, StringFormat=f}" />
-        			</StackPanel>
-        			<StackPanel Orientation="Horizontal" Margin="4,0,0,0">
-        				<TextBlock Text="End: " Foreground="#FF606060" Width="50" />
-        				<TextBlock Text="{Binding Path=EndTime, StringFormat=f}" />
-        			</StackPanel>
-        		</StackPanel>
-        	</Border>
-        </DataTemplate>
-        <DataTemplate x:Key="CalEntryDiffItemTemplate">
-            <Border BorderThickness="0,0,0,1" BorderBrush="#FF00451B" Padding="2" Margin="0,0,0,4">
-                <StackPanel>
-                    <TextBlock Text="{Binding Path=Entry.Subject}" FontWeight="Bold" TextWrapping="Wrap" MinWidth="150" />
-                    <TextBlock Text="{Binding Path=Entry.Location, Mode=Default}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path=Entry.Location, Mode=Default}"/>
-                    <StackPanel Orientation="Horizontal" Margin="4,0,0,0">
-                        <TextBlock Text="Start: " Foreground="#FF606060" Width="50" />
-                        <TextBlock Text="{Binding Path=Entry.StartTime, StringFormat=f}" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="4,0,0,0">
-                        <TextBlock Text="End: " Foreground="#FF606060" Width="50" />
-                        <TextBlock Text="{Binding Path=Entry.EndTime, StringFormat=f}" />
-                    </StackPanel>
-                    <TextBlock Text="Changes:" ToolTip="List of items in this entry that has changed since last sync"/>
-                    <ItemsControl ItemsSource="{Binding Path=Differences}" Margin="4,0,0,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="- " />
-                                    <TextBlock Text="{Binding}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+            <Border Padding="2" Margin="1,1,1,4" x:Name="bd" MinWidth="300">
+                <Grid>
+                	<Grid.ColumnDefinitions>
+                		<ColumnDefinition Width="Auto"/>
+                		<ColumnDefinition Width="*"/>
+                	</Grid.ColumnDefinitions>
+            		<CheckBox IsChecked="{Binding Path=ApplyModification, Mode=TwoWay}" Margin="4" ToolTip="Synchronize this entry" HorizontalAlignment="Center" VerticalAlignment="Center" Height="Auto" />
+            		<StackPanel Grid.Column="1" Margin="4,0,0,0">
+            			<TextBlock Text="{Binding Path=Entry.Subject}" Margin="-4,0,0,0" FontWeight="Bold" TextWrapping="Wrap" MinWidth="150" />
+            			<TextBlock Text="{Binding Path=Entry.Location, Mode=Default}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path=Entry.Location, Mode=Default}"/>
+            			<StackPanel Orientation="Horizontal">
+            				<TextBlock Text="Time: " Foreground="#FF606060" Width="50" />
+            				<TextBlock Text="{Binding Path=Entry, Converter={StaticResource EntryToDurationConverter}}" />
+            			</StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Type: " Foreground="#FF606060" Width="50" />
+                            <TextBlock Text="{Binding Path=Modification}" />
+                        </StackPanel>
+                        <StackPanel x:Name="pnlChangedFields" Visibility="Collapsed">
+            				<TextBlock Width="50" Text="Changes:" Foreground="#FF606060" ToolTip="List of items in this entry that has changed since last sync"/>
+            				<ItemsControl ItemsSource="{Binding Path=ChangedFields}" Margin="4,0,0,0">
+            					<ItemsControl.ItemTemplate>
+            						<DataTemplate>
+            							<StackPanel Orientation="Horizontal">
+            								<TextBlock Text="- " />
+            								<TextBlock Text="{Binding}" />
+            							</StackPanel>
+            						</DataTemplate>
+            					</ItemsControl.ItemTemplate>
+            				</ItemsControl>
+            			</StackPanel>
+            		</StackPanel>          
+            	</Grid>
             </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Path=Modification}" Value="Changed">
+                    <Setter Property="Visibility" Value="Visible" TargetName="pnlChangedFields" />
+                    <Setter Property="Background" Value="{StaticResource modifiedEntryBrush}" TargetName="bd" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Modification}" Value="New">
+                    <Setter Property="Background" Value="{StaticResource newEntryBrush}" TargetName="bd" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Modification}" Value="Removed">
+                    <Setter Property="Background" Value="{StaticResource oldEntryBrush}" TargetName="bd" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.3*"/>
-            <RowDefinition Height="0.3*"/>
-            <RowDefinition Height="0.3*"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Border Margin="4,4,4,4" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF2C8E1F">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                    <GradientStop Color="#FFDBFCB9" Offset="0"/>
-                    <GradientStop Color="#FFFFFFFF" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.Background>
     		<DockPanel>
-    			<TextBlock DockPanel.Dock="Top" Text="New Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries are new in Lotus Notes and doesn't exist in Outlook" Margin="3,3,8,3"/>
-    			<ListBox DockPanel.Dock="Top" x:Name="lstNewEntries" ToolTip="New Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
+    			<TextBlock DockPanel.Dock="Top" Text="Modified Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries are new in Lotus Notes and doesn't exist in Outlook" Margin="3,3,8,3"/>
+    			<ListBox DockPanel.Dock="Top" x:Name="lstModifiedEntries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
     		</DockPanel>
     	</Border>
-        <Border Margin="4,4,4,4" Grid.Row="1" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF9D6400">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                    <GradientStop Color="#FFECEC8B" Offset="0"/>
-                    <GradientStop Color="#FFFFFFFF" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.Background>
-        	<DockPanel>
-        		<TextBlock DockPanel.Dock="Top" Text="Modified Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries exists in Outlook but has been modified in Lotus Notes" Margin="3,3,8,3"/>
-        		<ListBox DockPanel.Dock="Top" x:Name="lstModifiedEntries" ToolTip="Modified Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryDiffItemTemplate}" />
-        	</DockPanel>
-        </Border>
-        <Border Margin="4,4,4,4" Grid.Row="2" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF7A0000">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                    <GradientStop Color="#FFECB7A0" Offset="0"/>
-                    <GradientStop Color="#FFFFFFFF" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.Background>
-        	<DockPanel>
-        		<TextBlock DockPanel.Dock="Top" Text="Old Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries exist in Outlook but are too old and will be removed" Margin="3,3,8,3"/>
-        		<ListBox DockPanel.Dock="Top" x:Name="lstOldEntries" ToolTip="Old Entries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
-        	</DockPanel>
-        </Border>
-        <UniformGrid HorizontalAlignment="Right" Grid.Row="3" VerticalAlignment="Center" Rows="1" Margin="0,8,8,8">
+        <UniformGrid HorizontalAlignment="Right" Grid.Row="1" VerticalAlignment="Center" Rows="1" Margin="0,8,8,8">
         	<Button Content="Cancel" x:Name="btnCancel" Click="btnCancel_Click" Margin="4" />
         	<Button Content="Merge Entries" x:Name="btnMerge" Click="btnMerge_Click" Margin="4" />
         </UniformGrid>
