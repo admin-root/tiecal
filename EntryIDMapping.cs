@@ -183,18 +183,24 @@ namespace TieCal
         /// <param name="outlookEntries">The outlook entries.</param>
         public void Cleanup(IEnumerable<CalendarEntry> notesEntries, IEnumerable<CalendarEntry> outlookEntries)
         {
-            var notesIDsToRemove = from id in KnownNotesIDs
-                                   where !(from entry in notesEntries select entry.NotesID).Contains(id)
-                                   select id;
-            var outlookIDsToRemove = from id in KnownOutlookIDs
-                                     where !(from entry in outlookEntries select entry.OutlookID).Contains(id)
-                                     select id;
-            List<string> notesIds = new List<string>(notesIDsToRemove.AsEnumerable());
-            List<string> outlookIds = new List<string>(outlookIDsToRemove.AsEnumerable());
-            foreach (string id in notesIds)
-                RemoveNotesID(id);
-            foreach (string id in outlookIds)
-                RemoveOutlookID(id);
+            if (notesEntries != null && notesEntries.Count() > 0)
+            {
+                var notesIDsToRemove = from id in KnownNotesIDs
+                                       where !(from entry in notesEntries select entry.NotesID).Contains(id)
+                                       select id;
+                List<string> notesIds = new List<string>(notesIDsToRemove.AsEnumerable());
+                foreach (string id in notesIds)
+                    RemoveNotesID(id);
+            }
+            if (outlookEntries != null && outlookEntries.Count() > 0)
+            {
+                var outlookIDsToRemove = from id in KnownOutlookIDs
+                                         where !(from entry in outlookEntries select entry.OutlookID).Contains(id)
+                                         select id;
+                List<string> outlookIds = new List<string>(outlookIDsToRemove.AsEnumerable());
+                foreach (string id in outlookIds)
+                    RemoveOutlookID(id);
+            }
         }
     }
 }

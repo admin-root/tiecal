@@ -102,8 +102,6 @@ namespace TieCal
                 {
                     localTZOffset = GetTimeZoneDiff(item);
                 }
-                else if (item.Name.Contains("TimeZone"))
-                    Debugger.Break();
             }
             if (stringItems.ContainsKey("Body"))
                 newEntry.Body = stringItems["Body"];
@@ -258,6 +256,8 @@ namespace TieCal
 
         public void BeginFetchCalendarEntries()
         {
+            FetchCalendarWorker.WorkerReportsProgress = true;
+            FetchCalendarWorker.WorkerSupportsCancellation = true;
             FetchCalendarWorker.RunWorkerAsync();
         }
 

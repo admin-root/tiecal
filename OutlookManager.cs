@@ -237,6 +237,8 @@ namespace TieCal
 
         public void BeginFetchCalendarEntries()
         {
+            FetchCalendarWorker.WorkerReportsProgress = true;
+            FetchCalendarWorker.WorkerSupportsCancellation = true;
             FetchCalendarWorker.RunWorkerAsync();
         }
 
@@ -252,7 +254,9 @@ namespace TieCal
                 foreach (AppointmentItem item in calendarFolder.Items)
                 {
                     var calEntry = CreateCalendarEntry(item);
-                    calEntries.Add(calEntry);
+                    if (calEntry.OutlookID != null)
+                        // TODO: report error when that mechanism exists
+                        calEntries.Add(calEntry);
                     i++;
                     if (worker.CancellationPending)
                     {
