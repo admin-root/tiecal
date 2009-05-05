@@ -165,7 +165,6 @@ namespace TieCal
         private void BeginFetchCalendarEntries()
         {
             IsSynchronizing = true;
-            txtStatusMessage.Text = "Reading calendars";
             wsReadNotes.StartWork();
             wsReadOutlook.StartWork();
         }

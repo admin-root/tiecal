@@ -94,12 +94,12 @@
 						<GradientStop Color="#FFFBFFBD" Offset="0.991"/>
 					</LinearGradientBrush>
 				</Border.Background>
-				<Grid>
+				<Grid Margin="4,4,4,4">
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
-					<TextBlock Text="Synchronizing Calendars" x:Name="txtStatusMessage" FontSize="16" FontStyle="Italic" FontWeight="Bold" d:LayoutOverrides="Height" Margin="4,4,4,4"/>
+					<TextBlock Text="Synchronizing Calendars" FontSize="16" FontStyle="Italic" FontWeight="Bold" d:LayoutOverrides="Height" Margin="4,4,4,4"/>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1" Orientation="Horizontal">
                         <StackPanel>
                     		<local:WorkerStep Title="Read Notes Calendar" x:Name="wsReadNotes" Width="150" Height="110" Margin="0,0,0,10" WorkDone="wsReadCalendar_WorkDone" />
