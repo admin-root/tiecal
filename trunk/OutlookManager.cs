@@ -19,9 +19,14 @@ namespace TieCal
             outlookApp = new ApplicationClass();
             FetchCalendarWorker = new BackgroundWorker();
             FetchCalendarWorker.WorkerReportsProgress = true;
-            FetchCalendarWorker.WorkerSupportsCancellation = false;
-            FetchCalendarWorker.DoWork += new DoWorkEventHandler(worker_DoWork);
+            FetchCalendarWorker.WorkerSupportsCancellation = true;
+            FetchCalendarWorker.DoWork += new DoWorkEventHandler(FetchCalendarWorker_DoWork);
+
+            MergeCalendarWorker = new BackgroundWorker();
+            MergeCalendarWorker.WorkerReportsProgress = true;
+            MergeCalendarWorker.DoWork += new DoWorkEventHandler(MergeCalendarWorker_DoWork);
         }
+
 
         private MAPIFolder GetCalendarFolder()
         {
@@ -164,11 +169,26 @@ namespace TieCal
             }
         }
         
-        public void MergeCalendarEntries(IEnumerable<ModifiedEntry> changedEntries)
+        public void DeleteAllEntries()
         {
             var calendarFolder = GetCalendarFolder();
+
+            foreach (AppointmentItem item in calendarFolder.Items)
+            {
+                item.Delete();
+            }
+        }
+
+        void MergeCalendarWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            MergeCalendarWorker.ReportProgress(0);
+            IEnumerable<ModifiedEntry> changedEntries = (IEnumerable<ModifiedEntry>) e.Argument;
+            var calendarFolder = GetCalendarFolder();
+            int count = changedEntries.Count();
+            int num = 0;
             foreach (var modification in changedEntries)
             {
+                MergeCalendarWorker.ReportProgress((num++ * 100) / count);
                 if (modification.ApplyModification == false)
                     continue;
                 try
@@ -201,16 +221,7 @@ namespace TieCal
             }
         }
 
-        public void DeleteAllEntries()
-        {
-            var calendarFolder = GetCalendarFolder();
-
-            foreach (AppointmentItem item in calendarFolder.Items)
-            {
-                item.Delete();
-                //item.Save();
-            }
-        }
+        public BackgroundWorker MergeCalendarWorker { get; private set; }
 
         #region ICalendarReader Members
         /// <summary>
@@ -219,14 +230,7 @@ namespace TieCal
         /// <value></value>
         public BackgroundWorker FetchCalendarWorker { get; private set; }
 
-        public void BeginFetchCalendarEntries()
-        {
-            FetchCalendarWorker.WorkerReportsProgress = true;
-            FetchCalendarWorker.WorkerSupportsCancellation = true;
-            FetchCalendarWorker.RunWorkerAsync();
-        }
-
-        void worker_DoWork(object sender, DoWorkEventArgs e)
+        void FetchCalendarWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = (BackgroundWorker)sender;
             worker.ReportProgress(0);

@@ -16,7 +16,7 @@ namespace TieCal
         {
             FetchCalendarWorker = new BackgroundWorker();
             FetchCalendarWorker.WorkerReportsProgress = true;
-            FetchCalendarWorker.WorkerSupportsCancellation = false;
+            FetchCalendarWorker.WorkerSupportsCancellation = true;
             FetchCalendarWorker.DoWork += new DoWorkEventHandler(worker_DoWork);
         }
 
@@ -253,13 +253,6 @@ namespace TieCal
         /// </summary>
         /// <value></value>
         public BackgroundWorker FetchCalendarWorker { get; private set; }
-
-        public void BeginFetchCalendarEntries()
-        {
-            FetchCalendarWorker.WorkerReportsProgress = true;
-            FetchCalendarWorker.WorkerSupportsCancellation = true;
-            FetchCalendarWorker.RunWorkerAsync();
-        }
 
         void worker_DoWork(object sender, DoWorkEventArgs e)
         {

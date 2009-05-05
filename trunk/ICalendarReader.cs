@@ -9,10 +9,6 @@ namespace TieCal
     public interface ICalendarReader
     {
         /// <summary>
-        /// Begins to fetch calendar entries asynchronously.
-        /// </summary>
-        void BeginFetchCalendarEntries();
-        /// <summary>
         /// Gets or sets the calendar entries. 
         /// </summary>
         /// <value>The calendar entries.</value>

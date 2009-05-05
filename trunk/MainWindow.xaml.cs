@@ -116,20 +116,22 @@ namespace TieCal
         }
         private NotesReader _notesReader;
         private OutlookManager _outlookManager;
+        private CalendarMerger _calendarMerger;
         private ProgramSettings settings;
         
         public MainWindow()
         {
             InitializeComponent();
+            progressBorder.Visibility = Visibility.Collapsed;
             settings = ProgramSettings.LoadSettings();
             txtNotesPassword.Password = settings.NotesPassword;            
             _notesReader = new NotesReader();
             _outlookManager = new OutlookManager();
-            _notesReader.FetchCalendarWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(notesworker_RunWorkerCompleted);
-            _notesReader.FetchCalendarWorker.ProgressChanged += new ProgressChangedEventHandler(notesworker_ProgressChanged);
-            _outlookManager.FetchCalendarWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(outlookworker_RunWorkerCompleted);
-            _outlookManager.FetchCalendarWorker.ProgressChanged += new ProgressChangedEventHandler(outlookworker_ProgressChanged);
-
+            _calendarMerger = new CalendarMerger();
+            wsReadNotes.SetupWorker(_notesReader.FetchCalendarWorker);
+            wsReadOutlook.SetupWorker(_outlookManager.FetchCalendarWorker);
+            wsMergeEntries.SetupWorker(_calendarMerger.Worker);
+            wsApplyChanges.SetupWorker(_outlookManager.MergeCalendarWorker);
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
 
@@ -164,112 +166,10 @@ namespace TieCal
         {
             IsSynchronizing = true;
             txtStatusMessage.Text = "Reading calendars";
-            _notesReader.BeginFetchCalendarEntries();
-            _outlookManager.BeginFetchCalendarEntries();
+            wsReadNotes.StartWork();
+            wsReadOutlook.StartWork();
         }
 
-        void outlookworker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            pbarOutlook.Value = e.ProgressPercentage;
-        }
-
-        void notesworker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            pbarNotes.Value = e.ProgressPercentage;
-        }
-        private bool fetchFailed = false;
-        private int doneCount;
-
-        void outlookworker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Error != null)
-            {
-                MessageBox.Show("Outlook calendar fetch failed: " + e.Error.Message);
-                fetchFailed = true;
-            }
-            if (e.Cancelled)
-                fetchFailed = true;
-            doneCount++;
-            if (doneCount == 2)
-                MergeCalendarEntries();
-        }
-
-        void notesworker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Error != null)
-            {
-                MessageBox.Show("Notes calendar fetch failed: " + e.Error.Message);
-                fetchFailed = true;
-            }
-            if (e.Cancelled)
-                fetchFailed = true;
-            doneCount++;
-            if (doneCount == 2)
-                MergeCalendarEntries();
-        }
-        
-        private void MergeCalendarEntries()
-        {
-            try
-            {
-                // TODO: This should probably move to MergeWindow or a separate class
-                txtStatusMessage.Text = "Processing Calendar Entries...";
-                if (fetchFailed)
-                    return;
-                var mapping = new EntryIDMapping();
-                try
-                {
-                    mapping.Load();
-                    mapping.Cleanup(_notesReader.CalendarEntries, _outlookManager.CalendarEntries);
-                }
-                catch (System.IO.FileNotFoundException) { }
-                var lowerLimit = DateTime.Now - TimeSpan.FromDays(30);
-                var upperLimit = DateTime.Now + TimeSpan.FromDays(30);
-                var entriesToMerge = from calEntry in _notesReader.CalendarEntries
-                                     where calEntry.OccursInInterval(lowerLimit, upperLimit)
-                                     select calEntry;
-                
-                foreach (var calEntry in entriesToMerge)
-                    calEntry.OutlookID = mapping.GetOutlookID(calEntry.NotesID);                
-                foreach (var calEntry in _outlookManager.CalendarEntries)
-                    calEntry.NotesID = mapping.GetNotesID(calEntry.OutlookID);
-
-                var newEntries = from notesEntry in entriesToMerge
-                                 where !(from outlookEntry in _outlookManager.CalendarEntries select outlookEntry.NotesID).Contains(notesEntry.NotesID)
-                                 select new ModifiedEntry(notesEntry, Modification.New);
-                var changedEntries = from notesEntry in entriesToMerge
-                                     join outlookEntry in _outlookManager.CalendarEntries on notesEntry.OutlookID equals outlookEntry.OutlookID
-                                     where notesEntry.OutlookID == outlookEntry.OutlookID && notesEntry.DiffersFrom(outlookEntry)
-                                     select new ModifiedEntry(notesEntry, Modification.Modified, notesEntry.GetDifferences(outlookEntry));
-
-                var oldEntries = from outlookEntry in _outlookManager.CalendarEntries
-                                 where !(from notesEntry in entriesToMerge select notesEntry.OutlookID).Contains(outlookEntry.OutlookID)
-                                 select new ModifiedEntry(outlookEntry, Modification.Removed);
-                List<ModifiedEntry> entries = new List<ModifiedEntry>(newEntries.Count() + changedEntries.Count() + oldEntries.Count());
-                entries.AddRange(newEntries);
-                entries.AddRange(changedEntries);
-                entries.AddRange(oldEntries);
-                MergeWindow mergeWin = new MergeWindow(entries);
-                bool doMerge = (mergeWin.ShowDialog() == true);
-                if (doMerge && !DryRun)
-                {
-                    _outlookManager.MergeCalendarEntries(entries);
-                    foreach (var entry in entries)
-                        if (entry.ApplyModification && entry.Entry.OutlookID != null && entry.Entry.NotesID != null)
-                            mapping.AddPair(entry.Entry.NotesID, entry.Entry.OutlookID);
-                    mapping.Save();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Failed to merge: " + ex.Message);
-            }
-            finally
-            {
-                txtStatusMessage.Text = "All Done";
-                IsSynchronizing = false;
-            }
-        }
         private void RefreshNotesDatabases()
         {
             _notesReader.Password = settings.NotesPassword;
@@ -279,8 +179,6 @@ namespace TieCal
         }
         private void btnSync_Click(object sender, RoutedEventArgs e)
         {
-            doneCount = 0;
-            fetchFailed = false;
             _notesReader.Password = settings.NotesPassword;
             _notesReader.DatabaseFile = settings.NotesDatabase;
             BeginFetchCalendarEntries();
@@ -309,6 +207,50 @@ namespace TieCal
         {
             settings.NotesDatabase = (string) cmbNotesDB.SelectedItem;
             UpdateIsReadyState();
+        }
+
+        private void wsReadCalendar_WorkDone(object sender, RoutedEventArgs e)
+        {
+            if (wsReadOutlook.IsFinished && wsReadNotes.IsFinished)
+            {
+                if (wsReadOutlook.WorkStage == WorkStepStage.Completed && wsReadNotes.WorkStage == WorkStepStage.Completed)
+                {
+                    _calendarMerger.NotesEntries = _notesReader.CalendarEntries;
+                    _calendarMerger.OutlookEntries = _outlookManager.CalendarEntries;
+                    wsMergeEntries.StartWork();
+                }
+                else
+                {
+                    // We're done, we were either aborted or cancelled
+                    IsSynchronizing = false;
+                }
+            }
+        }
+
+        private void wsMergeEntries_WorkDone(object sender, RoutedEventArgs e)
+        {
+            if (wsMergeEntries.WorkStage == WorkStepStage.Completed)
+            {
+                MergeWindow mergeWin = new MergeWindow(_calendarMerger.ModifiedEntries);
+                bool doMerge = (mergeWin.ShowDialog() == true);
+                if (doMerge && !DryRun)
+                {
+                    wsApplyChanges.StartWork(_calendarMerger.ModifiedEntries);
+                }
+                else
+                    IsSynchronizing = false;
+            }
+            else
+            {
+                // Cancelled or failed
+                IsSynchronizing = false;
+            }
+        }
+
+        private void wsApplyChanges_WorkDone(object sender, RoutedEventArgs e)
+        {
+            _calendarMerger.SaveMappings();
+            IsSynchronizing = false;
         }
     }
 
