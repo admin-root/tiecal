@@ -58,6 +58,13 @@
     <Reference Include="PresentationFramework">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
+    <Page Include="WorkerStep.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="WorkerStep.xaml.cs">
+      <DependentUpon>WorkerStep.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -83,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalendarEntry.cs" />
+    <Compile Include="CalendarMerger.cs" />
     <Compile Include="EntryIDMapping.cs" />
     <Compile Include="ICalendarReader.cs" />
     <Compile Include="MergeWindow.xaml.cs">
@@ -152,6 +160,9 @@
   <ItemGroup>
     <Resource Include="Images\Apply64.png" />
     <Resource Include="Images\Fail64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\agt_forward-64.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

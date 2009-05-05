@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     x:Class="TieCal.MainWindow"
     Title="TieCal Synchronizer" x:Name="window" 
-    xmlns:local="clr-namespace:TieCal" Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" Width="500" Height="400" Icon="Images\tiecal.ico">
+    xmlns:local="clr-namespace:TieCal" Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" Width="662" Height="476" Icon="Images\tiecal.ico">
 	<Window.Resources>
 		<local:BoolToOppositeBoolConverter x:Key="BoolToOppositeBoolConverter"/>
 		<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -87,34 +87,30 @@
 			<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}"/>
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8">
-			<Border x:Name="progressBorder" BorderBrush="#FF7A4E00" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" Padding="3,3,3,3" Visibility="Collapsed">
+			<Border x:Name="progressBorder" BorderBrush="#FF7A4E00" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" Padding="3,3,3,3" Visibility="Visible">
 				<Border.Background>
 					<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-						<GradientStop Color="#FFFFFDCC" Offset="0"/>
-						<GradientStop Color="#FFFFE672" Offset="1"/>
+						<GradientStop Color="#FFFFFFFF" Offset="0"/>
+						<GradientStop Color="#FFFBFFBD" Offset="0.991"/>
 					</LinearGradientBrush>
 				</Border.Background>
-				<Grid Margin="8,8,8,8">
+				<Grid>
 					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="Auto"/>
-					</Grid.ColumnDefinitions>
-					<TextBlock Text="Reading Notes Calendar:" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0"/>
-					<TextBlock Grid.Row="1" Text="Reading Outlook Calendar:" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0"/>
-					<ProgressBar Grid.Column="1" Margin="4" VerticalAlignment="Center" Height="18" x:Name="pbarNotes"/>
-					<ProgressBar Grid.Column="1" Margin="4" Grid.Row="1" Height="18" VerticalAlignment="Center" x:Name="pbarOutlook"/>
-					<Button Content="Cancel" Margin="4,8,4,8" Grid.Column="2" Grid.RowSpan="2" x:Name="btnCancelSync" Click="btnCancelSync_Click" Width="80" Height="30"/>
-					<StackPanel HorizontalAlignment="Stretch" Margin="16,0,16,0" VerticalAlignment="Center" Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2" Orientation="Horizontal">
-						<Image Margin="4,4,4,4" Width="64" Height="64" Source="Images\Clock.png"/>
-						<TextBlock Text="progress" x:Name="txtStatusMessage" VerticalAlignment="Top" FontSize="16" FontStyle="Italic" FontWeight="Bold"/>
-					</StackPanel>
-				</Grid>
+					<TextBlock Text="Synchronizing Calendars" x:Name="txtStatusMessage" FontSize="16" FontStyle="Italic" FontWeight="Bold" d:LayoutOverrides="Height" Margin="4,4,4,4"/>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1" Orientation="Horizontal">
+                        <StackPanel>
+                    		<local:WorkerStep Title="Read Notes Calendar" x:Name="wsReadNotes" Width="150" Height="110" Margin="0,0,0,10" WorkDone="wsReadCalendar_WorkDone" />
+                    		<local:WorkerStep Title="Read Outlook Calendar" x:Name="wsReadOutlook" Width="150" Height="110" WorkDone="wsReadCalendar_WorkDone" />
+                    	</StackPanel>
+                    	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
+                    	<local:WorkerStep Title="Merge Entries" x:Name="wsMergeEntries" Width="150" Height="110" WorkDone="wsMergeEntries_WorkDone" />
+                    	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
+                    	<local:WorkerStep Title="Apply Changes" Width="150" Height="110" x:Name="wsApplyChanges" WorkDone="wsApplyChanges_WorkDone" />
+                    </StackPanel>
+                </Grid>
 			</Border>
 			<Border x:Name="welcomeBorder" CornerRadius="3,3,3,3" BorderThickness="1,1,1,1" BorderBrush="#FF135C00">
 				<Border.Background>
