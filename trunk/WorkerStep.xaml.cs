@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.ComponentModel;
 using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace TieCal
 {
@@ -40,6 +41,36 @@ namespace TieCal
             DependencyProperty.RegisterReadOnly("WorkStage", typeof(WorkStepStage), typeof(WorkerStep), new UIPropertyMetadata(WorkStepStage.Waiting, new PropertyChangedCallback(WorkStage_Changed)));
 
         public static readonly DependencyProperty WorkStageProperty = WorkStageKey.DependencyProperty;
+
+        public Brush BorderBrush
+        {
+            get { return (Brush)GetValue(BorderBrushProperty); }
+            set { SetValue(BorderBrushProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for BorderBrush.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty BorderBrushProperty =
+            DependencyProperty.Register("BorderBrush", typeof(Brush), typeof(WorkerStep), new UIPropertyMetadata(null));
+
+        public Brush BorderBackground
+        {
+            get { return (Brush)GetValue(BorderBackgroundProperty); }
+            set { SetValue(BorderBackgroundProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for BorderBackgroundBrush.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty BorderBackgroundProperty =
+            DependencyProperty.Register("BorderBackground", typeof(Brush), typeof(WorkerStep), new UIPropertyMetadata(null));
+
+        public ImageSource StatusImage
+        {
+            get { return (ImageSource)GetValue(StatusImageProperty); }
+            set { SetValue(StatusImageProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for StatusImage.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty StatusImageProperty =
+            DependencyProperty.Register("StatusImage", typeof(ImageSource), typeof(WorkerStep), new UIPropertyMetadata(null));
         #endregion
 
         private BackgroundWorker worker = null;
@@ -49,26 +80,14 @@ namespace TieCal
             WorkerStep ws = (WorkerStep)sender;
             switch ((WorkStepStage)e.NewValue)
             {
-                case WorkStepStage.Waiting:
-                    ws.Opacity = 0.65;
-                    break;
-                case WorkStepStage.Working:
-                    ws.Opacity = 1.0;
-                    break;
                 case WorkStepStage.Failed:
-                    ws.imgStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Images/Fail64.png", UriKind.Absolute));
-                    ws.RaiseEvent(new RoutedEventArgs(WorkDoneEvent, ws));
-                    break;
                 case WorkStepStage.Cancelled:
-                    goto case WorkStepStage.Failed;
                 case WorkStepStage.Completed:
-                    ws.imgStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Images/Apply64.png", UriKind.Absolute));
                     ws.RaiseEvent(new RoutedEventArgs(WorkDoneEvent, ws));
-                    break;
-                default:
                     break;
             }
         }
+
         public WorkerStep()
         {
             InitializeComponent();
@@ -141,7 +160,6 @@ namespace TieCal
 
         void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            this.Opacity = 1.0;
             pbar.Value = e.ProgressPercentage;
         }
 	}
