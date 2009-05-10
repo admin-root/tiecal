@@ -135,6 +135,14 @@ namespace TieCal
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
 
+        void ResetWorkSteps()
+        {
+            wsReadNotes.Reset();
+            wsReadOutlook.Reset();
+            wsMergeEntries.Reset();
+            wsApplyChanges.Reset();
+        }
+
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             if (settings.NotesPassword != null && settings.NotesPassword.Length > 0)
@@ -165,6 +173,7 @@ namespace TieCal
         private void BeginFetchCalendarEntries()
         {
             IsSynchronizing = true;
+            ResetWorkSteps();
             wsReadNotes.StartWork();
             wsReadOutlook.StartWork();
         }

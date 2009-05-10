@@ -87,7 +87,11 @@ namespace TieCal
         {
             CalendarEntry entry = (CalendarEntry) value;
             var duration = entry.EndTime - entry.StartTime;
-            if (entry.StartTime.Date == entry.EndTime.Date)
+            if (entry.IsAllDay)
+            {
+                return String.Format("{0:d} - {1:d} ({2} day(s))", entry.StartTime, entry.EndTime, Math.Round(duration.TotalDays, 0));
+            }
+            else if (entry.StartTime.Date == entry.EndTime.Date)
             {
                 return String.Format("{0:d} {1:t}-{2:t} ({3:0.#} hours)", entry.StartTime, entry.StartTime, entry.EndTime, duration.TotalHours);
             }
