@@ -162,7 +162,8 @@ namespace TieCal
             olItem.UnRead = false;
             olItem.ReminderOverrideDefault = true;
             olItem.ReminderSet = false;
-            //UpdateRecurrencePattern(olItem, entry.Occurrences);
+            olItem.AllDayEvent = entry.IsAllDay;
+            UpdateRecurrencePattern(olItem, entry.Occurrences);
             if (!entry.IsRepeating)
             {
                 olItem.Save();
@@ -242,6 +243,8 @@ namespace TieCal
                 foreach (AppointmentItem item in calendarFolder.Items)
                 {
                     var calEntry = CreateCalendarEntry(item);
+                    if (calEntry.Subject == "testing-twoday")
+                        Debugger.Break();
                     if (calEntry.OutlookID != null)
                         // TODO: report error when that mechanism exists
                         calEntries.Add(calEntry);

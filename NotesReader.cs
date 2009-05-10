@@ -54,6 +54,9 @@ namespace TieCal
         /// Creates the calendar entry from the provided Lotus Notes calendar entry.
         /// </summary>
         /// <param name="notesEntry">The notes entry.</param>
+        /// <remarks>
+        /// More details about Notes API: http://www-01.ibm.com/support/docview.wss?rs=463&context=SSKTMJ&context=SSKTWP&dc=DB520&dc=D600&dc=DB530&dc=D700&dc=DB500&dc=DB540&dc=DB510&dc=DB550&q1=1229486&uid=swg21229486&loc=en_US&cs=utf-8&lang=en
+        /// </remarks>
         /// <returns></returns>
         private static CalendarEntry CreateCalendarEntry(NotesViewEntry notesEntry)
         {
@@ -79,6 +82,9 @@ namespace TieCal
                 if (item.DateTimeValue != null)
                 {
                     dateItems.Add(item.Name, (DateTime) item.DateTimeValue.LSGMTTime);
+                    if (item.Name == "StartTime" || item.Name == "EndTime")
+                        // We need the local time for some all-day events in case they don't have time-zone info
+                        dateItems.Add(item.Name + "-local", (DateTime)item.DateTimeValue.LSLocalTime);
                 }
                 if (item.Name == "CalendarDateTime")
                 {
@@ -161,10 +167,29 @@ namespace TieCal
             // Notes stores timezone offset in the inverted form (e.g. CET would be -1, instead of +1)
             newEntry.SetEndTimeZoneFromOffset(TimeSpan.FromTicks(endTZOffset.Ticks * -1));
             newEntry.SetStartTimeZoneFromOffset(TimeSpan.FromTicks(startTZOffset.Ticks * -1));
-            if (Math.Round(newEntry.Duration.TotalMinutes, 1) == 1440)
+            if (stringItems["AppointmentType"] == "2")
+            {
+                /* All Day Event */
                 newEntry.IsAllDay = true;
-            //if (newEntry.Subject.Contains("test-all"))
-            //    Debugger.Break();
+                newEntry.StartTimeZone = TimeZoneInfo.Local;
+                newEntry.EndTimeZone = TimeZoneInfo.Local;
+                newEntry.StartTime = TimeZoneInfo.ConvertTimeToUtc(new DateTime(newEntry.StartTime.Year, newEntry.StartTime.Month, newEntry.StartTime.Day, 0, 0, 1, DateTimeKind.Local));
+                newEntry.EndTime = TimeZoneInfo.ConvertTimeToUtc(new DateTime(newEntry.EndTime.Year, newEntry.EndTime.Month, newEntry.EndTime.Day, 23, 59, 59, DateTimeKind.Local));
+            }
+            else if (stringItems["AppointmentType"] == "1")
+            {
+                // Anniversary
+                newEntry.StartTime = dateItems["StartTime-local"];
+                newEntry.EndTime = dateItems["EndTime-local"];
+                newEntry.IsAllDay = true;
+            }
+            if (!stringItems.ContainsKey("OrgRepeat") && newEntry.Occurrences.Count > 1)
+            {
+                newEntry.Occurrences.Clear();
+                newEntry.Occurrences.Add(newEntry.StartTime);
+            }
+            if (newEntry.Subject.Contains("test-two"))
+                Debugger.Break();
             Debug.Assert(newEntry.Occurrences.Count > 0);
             Debug.Assert(newEntry.NotesID != null && newEntry.NotesID.Length > 0);
 

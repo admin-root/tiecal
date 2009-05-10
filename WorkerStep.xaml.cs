@@ -93,8 +93,20 @@ namespace TieCal
             InitializeComponent();
         }
 
+        public void Reset()
+        {
+            WorkStage = WorkStepStage.Waiting;
+            ErrorMessage = null;
+            pbar.Value = 0.0;
+        }
+
         public void SetupWorker(BackgroundWorker worker)
-		{            
+		{
+            if (this.worker != null)
+            {
+                this.worker.RunWorkerCompleted -= worker_RunWorkerCompleted;
+                this.worker.ProgressChanged -= worker_ProgressChanged;
+            }
             worker.ProgressChanged += new ProgressChangedEventHandler(worker_ProgressChanged);
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
             this.worker = worker;
@@ -143,8 +155,6 @@ namespace TieCal
         void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             BackgroundWorker worker = (BackgroundWorker)sender;
-            worker.RunWorkerCompleted -= worker_RunWorkerCompleted;
-            worker.ProgressChanged -= worker_ProgressChanged;
             pbar.Value = 100;
             if (e.Error != null)
             {

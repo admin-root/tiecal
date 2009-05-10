@@ -88,7 +88,7 @@ namespace TieCal
             foreach (var entry in ModifiedEntries)
                 if (entry.ApplyModification && entry.Entry.OutlookID != null && entry.Entry.NotesID != null)
                     mapping.AddPair(entry.Entry.NotesID, entry.Entry.OutlookID);
-            
+            mapping.Save();
         }
     }
 }
