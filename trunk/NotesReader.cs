@@ -188,8 +188,8 @@ namespace TieCal
                 newEntry.Occurrences.Clear();
                 newEntry.Occurrences.Add(newEntry.StartTime);
             }
-            if (newEntry.Subject.Contains("test-two"))
-                Debugger.Break();
+            //if (newEntry.Subject.Contains("test-two"))
+            //    Debugger.Break();
             Debug.Assert(newEntry.Occurrences.Count > 0);
             Debug.Assert(newEntry.NotesID != null && newEntry.NotesID.Length > 0);
 

@@ -243,8 +243,6 @@ namespace TieCal
                 foreach (AppointmentItem item in calendarFolder.Items)
                 {
                     var calEntry = CreateCalendarEntry(item);
-                    if (calEntry.Subject == "testing-twoday")
-                        Debugger.Break();
                     if (calEntry.OutlookID != null)
                         // TODO: report error when that mechanism exists
                         calEntries.Add(calEntry);
