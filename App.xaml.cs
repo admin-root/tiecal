@@ -34,11 +34,34 @@ namespace TieCal
                 sb.AppendFormat("Parameter: {0}", padding, (ex as ArgumentException).ParamName);
             return sb.ToString();
         }
+        private bool IsComException(Exception ex)
+        {
+            while (ex != null)
+            {
+                if (ex is System.Runtime.InteropServices.COMException)
+                    return true;
+                ex = ex.InnerException;
+            }
+            return false;
+        }
         void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
             try
             {
-                StringBuilder sb = new StringBuilder("Unhandled Exception: ");
+                // Tell Windows we've handled the error, otherwise it'll try to submit a crash report to microsoft.com
+                e.Handled = true;
+                StringBuilder sb = new StringBuilder();
+                if (IsComException(e.Exception))
+                {
+                    sb.AppendLine("Failed to communicate with calendar applications. This usually means that Outlook and/or Lotus Notes isn't installed.");
+                    sb.AppendLine("");
+                    sb.AppendLine("Tested versions are: Lotus Notes 7.0.2 and Outlook 2007");
+                    sb.AppendLine("TieCal will now exit");
+                    MessageBox.Show(sb.ToString());
+                    Environment.Exit(-2);
+                    return;
+                }
+                sb.AppendLine("Unhandled Exception: ");
                 if (e.Exception != null)
                 {
                     sb.AppendLine(GetExceptionDetailsString(e.Exception, 0));
@@ -53,16 +76,15 @@ namespace TieCal
                     sb.AppendLine();
                     sb.AppendLine("StackTrace: " + e.Exception.StackTrace);
                 }
-                MessageBox.Show(sb.ToString());
-
+                sb.AppendLine("");
+                sb.AppendLine("Press 'Cancel' to terminate or 'Ok' to keep the application running");
+                var response = MessageBox.Show(sb.ToString(), "TieCal Error", MessageBoxButton.OKCancel);
+                if (response != MessageBoxResult.OK)
+                    Environment.Exit(-1);
             }
             catch
             {
                 /* We can't allow a throw in this method */
-            }
-            finally
-            {
-                e.Handled = true;
             }
         }
     }
