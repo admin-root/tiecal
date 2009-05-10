@@ -1,7 +1,0 @@
-#summary Screenshots of TieCal
-
-= Introduction =
-
-Here are some screenshots of TieCal
-
-(TODO: Figure out how to upload images to wiki pages)
