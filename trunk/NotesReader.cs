@@ -178,8 +178,9 @@ namespace TieCal
                 newEntry.IsAllDay = true;
                 newEntry.StartTimeZone = TimeZoneInfo.Local;
                 newEntry.EndTimeZone = TimeZoneInfo.Local;
-                newEntry.StartTime = TimeZoneInfo.ConvertTimeToUtc(new DateTime(newEntry.StartTime.Year, newEntry.StartTime.Month, newEntry.StartTime.Day, 0, 0, 1, DateTimeKind.Local));
-                newEntry.EndTime = TimeZoneInfo.ConvertTimeToUtc(new DateTime(newEntry.EndTime.Year, newEntry.EndTime.Month, newEntry.EndTime.Day, 23, 59, 59, DateTimeKind.Local));
+                // Reset the time to zero to reflect that it is all day event
+                newEntry.StartTime = TimeZoneInfo.ConvertTimeToUtc(newEntry.StartTime.Date);
+                newEntry.EndTime = TimeZoneInfo.ConvertTimeToUtc(newEntry.EndTime.Date.AddDays(1));
             }
             else if (stringItems["AppointmentType"] == "1")
             {
