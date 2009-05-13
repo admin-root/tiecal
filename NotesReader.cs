@@ -317,7 +317,8 @@ namespace TieCal
                         continue;
                     completedIds.Add(viewEntry.NoteID);
                     CalendarEntry calEntry = CreateCalendarEntry(viewEntry);
-                    calEntries.Add(calEntry);
+                    if (calEntry != null)
+                        calEntries.Add(calEntry);
                 }
                 e.Result = calEntries;
                 CalendarEntries = calEntries;
