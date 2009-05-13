@@ -31,7 +31,7 @@ namespace TieCal
             var lowerLimit = DateTime.Now - TimeSpan.FromDays(30);
             var upperLimit = DateTime.Now + TimeSpan.FromDays(30);
             var entriesToMerge = from calEntry in NotesEntries
-                                 where calEntry.OccursInInterval(lowerLimit, upperLimit)
+                                 where calEntry.IsRepeating == false && calEntry.OccursInInterval(lowerLimit, upperLimit)
                                  select calEntry;
             if (Worker.CancellationPending)
                 return;

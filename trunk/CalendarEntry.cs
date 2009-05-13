@@ -350,9 +350,7 @@ namespace TieCal
                     return false;
                 if (SameDayOfWeek || SameDayOfMonth)
                     return false;
-                if (SameMonth)
-                    return false;
-
+                
                 return true;
             }
 
