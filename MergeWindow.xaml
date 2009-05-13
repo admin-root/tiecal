@@ -54,7 +54,7 @@
             	</Grid>
             </Border>
             <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=Modification}" Value="Changed">
+                <DataTrigger Binding="{Binding Path=Modification}" Value="Modified">
                     <Setter Property="Visibility" Value="Visible" TargetName="pnlChangedFields" />
                     <Setter Property="Background" Value="{StaticResource modifiedEntryBrush}" TargetName="bd" />
                 </DataTrigger>
@@ -66,6 +66,28 @@
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
+        <ControlTemplate x:Key="ModBoxTemplate">
+            <Border x:Name="bd" Margin="8" CornerRadius="2" BorderThickness="1" Padding="2">
+                <TextBlock x:Name="txtMessage" TextWrapping="Wrap" />
+            </Border>
+            <ControlTemplate.Triggers>
+                <DataTrigger Binding="{Binding Path=Modification}" Value="Modified">
+                    <Setter Property="Text" TargetName="txtMessage" Value="This entry exists in Outlook but has been modified since last sync. Changes will be saved to Outlook." />
+                    <Setter Property="Background" TargetName="bd" Value="{StaticResource modifiedEntryBrush}" />
+                    <Setter Property="BorderBrush" TargetName="bd" Value="Black" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Modification}" Value="New">
+                    <Setter Property="Text" TargetName="txtMessage" Value="This entry is new in Lotus Notes and has not been synchronized before. It will be created in Outlook." />
+                    <Setter Property="Background" TargetName="bd" Value="{StaticResource newEntryBrush}" />
+                    <Setter Property="BorderBrush" TargetName="bd" Value="Black" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Modification}" Value="Removed">
+                    <Setter Property="Text" TargetName="txtMessage" Value="This entry has either been removed in Notes, is too old or has never existed in Lotus Notes. It will be deleted from Outlook." />
+                    <Setter Property="Background" TargetName="bd" Value="{StaticResource oldEntryBrush}" />
+                    <Setter Property="BorderBrush" TargetName="bd" Value="Black" />
+                </DataTrigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>        
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -79,45 +101,55 @@
         <GridSplitter HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="5" />
         <Border Margin="4,4,9,4" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF2C8E1F">
     		<DockPanel>
-    			<TextBlock DockPanel.Dock="Top" Text="Modified Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries are new in Lotus Notes and doesn't exist in Outlook" Margin="3,3,8,3"/>
-    			<ListBox DockPanel.Dock="Top" x:Name="lstModifiedEntries" IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding}" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
-    		</DockPanel>
+    			<TextBlock DockPanel.Dock="Top" Text="Modified Entries" TextWrapping="Wrap" FontWeight="Bold" Margin="3,3,8,3"/>
+                <ListBox DockPanel.Dock="Top" x:Name="lstModifiedEntries" IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding}"
+                         Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel IsItemsHost="True" Orientation="Vertical" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                </ListBox>
+            </DockPanel>
     	</Border>
         <Border Margin="4" Grid.Column="1">
             <DockPanel LastChildFill="True">
-                <Border DockPanel.Dock="Top" Margin="8">
-                    <!--<Border.Style>
-                        <Style>
-                            <Setter Property="Background" Value="Green" />
+                <Control Template="{StaticResource ModBoxTemplate}" DockPanel.Dock="Top" />                
+                <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="Details" Margin="0,4,0,4" />
+                <Grid Margin="4,0,0,0">
+                    <Grid.Resources>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Margin" Value="2,2,2,0" />
                         </Style>
-                    </Border.Style>-->
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="This entry is: " />
-                        <TextBlock Text="{Binding Path=Modification}" />
-                    </StackPanel>
-                </Border>
-                <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="Details" />
-                <StackPanel DockPanel.Dock="Top">
-                    <WrapPanel Margin="4">
-                        <TextBlock Text="Subject: " />
-                        <TextBlock Text="{Binding Path=Entry.Subject}" />
-                    </WrapPanel>
-                    <WrapPanel Margin="4">
-                        <TextBlock Text="Location: " />
-                        <TextBlock Text="{Binding Path=Entry.Location}" />
-                    </WrapPanel>
-                    <WrapPanel Margin="4">
-                        <TextBlock Text="Start: " />
-                        <TextBlock Text="{Binding Path=Entry.StartTime, StringFormat=f}" />
-                    </WrapPanel>
-                    <WrapPanel Margin="4">
-                        <TextBlock Text="End: " />
-                        <TextBlock Text="{Binding Path=Entry.EndTime, StringFormat=f}" />
-                    </WrapPanel>
-                        <TextBlock Margin="4" Text="Body:" />
-                        <TextBlock Margin="10,4,4,4" Text="{Binding Path=Entry.Body}" Height="80"
-                                   ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Hidden" TextWrapping="Wrap" />
-                </StackPanel>
+                    </Grid.Resources>
+                	<Grid.RowDefinitions>
+                		<RowDefinition Height="Auto"/>
+                		<RowDefinition Height="*"/>
+                	</Grid.RowDefinitions>
+                	<Grid.ColumnDefinitions>
+                		<ColumnDefinition Width="Auto"/>
+                		<ColumnDefinition Width="*"/>
+                	</Grid.ColumnDefinitions>
+                	<StackPanel VerticalAlignment="Top">
+                		<TextBlock Text="Subject:" />
+                		<TextBlock Text="Location:" />
+                		<TextBlock Text="Start:" />
+                		<TextBlock Text="End:" />
+                        <TextBlock Text="Is All Day:" />
+                	</StackPanel>
+                	<StackPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Top">
+                		<TextBlock Text="{Binding Path=Entry.Subject}" />
+                		<TextBlock Text="{Binding Path=Entry.Location}" />
+                		<TextBlock Text="{Binding Path=Entry.StartTime, StringFormat=f}" />
+                		<TextBlock Text="{Binding Path=Entry.EndTime, StringFormat=f}" />
+                        <TextBlock Text="{Binding Path=Entry.IsAllDay}" />
+                	</StackPanel>
+                	<TextBlock Margin="2,2,2,0" Text="Body:" VerticalAlignment="Top" Height="14.483" Grid.Row="1" />
+                	<ScrollViewer Grid.ColumnSpan="2" Grid.Row="1" Margin="16,22,4,4" BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" BorderThickness="1,1,1,1">
+                		<TextBlock Text="{Binding Path=Entry.Body}"
+                			ScrollViewer.CanContentScroll="True" TextWrapping="Wrap" />
+                	</ScrollViewer>
+                </Grid>
             </DockPanel>
         </Border>
         <UniformGrid HorizontalAlignment="Right" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Center" Rows="1" Margin="0,8,8,8">

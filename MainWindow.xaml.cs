@@ -151,6 +151,7 @@ namespace TieCal
                 expSettings.IsExpanded = true;
             DryRun = settings.DryRun;
             UpdateIsReadyState();
+            //new MergeWindow(new List<ModifiedEntry>()).Show();
         }
 
         protected override void OnClosing(CancelEventArgs e)

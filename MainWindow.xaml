@@ -53,13 +53,7 @@
 		</EventTrigger>
 	</Window.Triggers>
 	<DockPanel Margin="8,8,8,8">
-		<Expander x:Name="expSettings" DockPanel.Dock="Top" IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" BorderBrush="#FF000742">
-			<Expander.Background>
-				<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-					<GradientStop Color="#FFFFFFFF" Offset="0"/>
-					<GradientStop Color="#FFDCE5F5" Offset="1"/>
-				</LinearGradientBrush>
-			</Expander.Background>
+		<Expander x:Name="expSettings" DockPanel.Dock="Top" IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" BorderBrush="#FF000742" Background="#FFFFFFFF">
 			<Expander.Header>
 				<TextBlock Text="Settings" FontWeight="Bold" />
 			</Expander.Header>
@@ -87,11 +81,11 @@
 			<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}"/>
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8">
-			<Border x:Name="progressBorder" BorderBrush="#FF7A4E00" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" Padding="3,3,3,3" Visibility="Visible">
+			<Border x:Name="progressBorder" BorderBrush="#FF010960" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" Padding="3,3,3,3" Visibility="Visible">
 				<Border.Background>
 					<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-						<GradientStop Color="#FFFFFFFF" Offset="0"/>
-						<GradientStop Color="#FFFBFDCD" Offset="1"/>
+						<GradientStop Color="#FFEBF3FB" Offset="0"/>
+						<GradientStop Color="#FF93B2D6" Offset="1"/>
 					</LinearGradientBrush>
 				</Border.Background>
 				<Grid Margin="4,4,4,4">
@@ -99,8 +93,8 @@
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
-					<TextBlock Text="Synchronizing Calendars" FontSize="16" FontStyle="Italic" FontWeight="Bold" d:LayoutOverrides="Height" Margin="4,4,4,4"/>
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1" Orientation="Horizontal">
+					<TextBlock Text="Synchronizing Calendars" FontSize="16" FontStyle="Normal" FontWeight="Bold" d:LayoutOverrides="Height" Margin="4,4,4,4"/>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1" Orientation="Horizontal" Margin="4,4,4,4">
                         <StackPanel>
                     		<local:WorkerStep Title="Read Notes Calendar" x:Name="wsReadNotes" Width="150" Height="110" Margin="0,0,0,10" WorkDone="wsReadCalendar_WorkDone" />
                     		<local:WorkerStep Title="Read Outlook Calendar" x:Name="wsReadOutlook" Width="150" Height="110" WorkDone="wsReadCalendar_WorkDone" />
