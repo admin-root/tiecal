@@ -109,6 +109,10 @@ namespace TieCal
                     localTZOffset = GetTimeZoneDiff(item);
                 }
             }
+            // sanity check
+            if (stringItems.ContainsKey("TaskType") && !stringItems.ContainsKey("AppointmentType"))
+                // It's probably a TODO or Followup, ignore it
+                return null;
             if (stringItems.ContainsKey("Body"))
                 newEntry.Body = stringItems["Body"];
 
@@ -167,6 +171,7 @@ namespace TieCal
             // Notes stores timezone offset in the inverted form (e.g. CET would be -1, instead of +1)
             newEntry.SetEndTimeZoneFromOffset(TimeSpan.FromTicks(endTZOffset.Ticks * -1));
             newEntry.SetStartTimeZoneFromOffset(TimeSpan.FromTicks(startTZOffset.Ticks * -1));
+            
             if (stringItems["AppointmentType"] == "2")
             {
                 /* All Day Event */
