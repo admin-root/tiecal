@@ -27,7 +27,7 @@ namespace TieCal
         public MergeWindow(IEnumerable<ModifiedEntry> modifiedEntries)
             : this()
         {
-            lstModifiedEntries.ItemsSource = modifiedEntries;
+            this.DataContext = modifiedEntries;
         }
 
         private void btnMerge_Click(object sender, RoutedEventArgs e)

@@ -2,7 +2,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:TieCal"
-    Title="MergeWindow" Height="600" Width="500" Icon="Images\tiecal.ico">
+    Title="MergeWindow" Width="800" Height="600" Icon="Images\tiecal.ico">
     <Window.Resources>
         <local:EntryToDurationConverter x:Key="EntryToDurationConverter" />
         <LinearGradientBrush x:Key="newEntryBrush" EndPoint="1,0.5" StartPoint="0,0.5">
@@ -72,13 +72,55 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Border Margin="4,4,4,4" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF2C8E1F">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.5*" />
+            <ColumnDefinition Width="0.5*" />
+        </Grid.ColumnDefinitions>
+        <GridSplitter HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="5" />
+        <Border Margin="4,4,9,4" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" BorderBrush="#FF2C8E1F">
     		<DockPanel>
     			<TextBlock DockPanel.Dock="Top" Text="Modified Entries" TextWrapping="Wrap" FontWeight="Bold" ToolTip="These entries are new in Lotus Notes and doesn't exist in Outlook" Margin="3,3,8,3"/>
-    			<ListBox DockPanel.Dock="Top" x:Name="lstModifiedEntries" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
+    			<ListBox DockPanel.Dock="Top" x:Name="lstModifiedEntries" IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding}" Margin="20,3,8,3" ItemTemplate="{DynamicResource CalEntryItemTemplate}" />
     		</DockPanel>
     	</Border>
-        <UniformGrid HorizontalAlignment="Right" Grid.Row="1" VerticalAlignment="Center" Rows="1" Margin="0,8,8,8">
+        <Border Margin="4" Grid.Column="1">
+            <DockPanel LastChildFill="True">
+                <Border DockPanel.Dock="Top" Margin="8">
+                    <!--<Border.Style>
+                        <Style>
+                            <Setter Property="Background" Value="Green" />
+                        </Style>
+                    </Border.Style>-->
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="This entry is: " />
+                        <TextBlock Text="{Binding Path=Modification}" />
+                    </StackPanel>
+                </Border>
+                <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="Details" />
+                <StackPanel DockPanel.Dock="Top">
+                    <WrapPanel Margin="4">
+                        <TextBlock Text="Subject: " />
+                        <TextBlock Text="{Binding Path=Entry.Subject}" />
+                    </WrapPanel>
+                    <WrapPanel Margin="4">
+                        <TextBlock Text="Location: " />
+                        <TextBlock Text="{Binding Path=Entry.Location}" />
+                    </WrapPanel>
+                    <WrapPanel Margin="4">
+                        <TextBlock Text="Start: " />
+                        <TextBlock Text="{Binding Path=Entry.StartTime, StringFormat=f}" />
+                    </WrapPanel>
+                    <WrapPanel Margin="4">
+                        <TextBlock Text="End: " />
+                        <TextBlock Text="{Binding Path=Entry.EndTime, StringFormat=f}" />
+                    </WrapPanel>
+                        <TextBlock Margin="4" Text="Body:" />
+                        <TextBlock Margin="10,4,4,4" Text="{Binding Path=Entry.Body}" Height="80"
+                                   ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Hidden" TextWrapping="Wrap" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+        <UniformGrid HorizontalAlignment="Right" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Center" Rows="1" Margin="0,8,8,8">
         	<Button Content="Cancel" x:Name="btnCancel" Click="btnCancel_Click" Margin="4" />
         	<Button Content="Merge Entries" x:Name="btnMerge" Click="btnMerge_Click" Margin="4" />
         </UniformGrid>
