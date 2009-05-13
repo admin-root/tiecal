@@ -100,7 +100,7 @@
                     		<local:WorkerStep Title="Read Outlook Calendar" x:Name="wsReadOutlook" Width="150" Height="110" WorkDone="wsReadCalendar_WorkDone" />
                     	</StackPanel>
                     	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
-                    	<local:WorkerStep Title="Merge Entries" x:Name="wsMergeEntries" Width="150" Height="110" WorkDone="wsMergeEntries_WorkDone" />
+                    	<local:WorkerStep Title="Compare Calendars" x:Name="wsMergeEntries" Width="150" Height="110" WorkDone="wsMergeEntries_WorkDone" />
                     	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
                     	<local:WorkerStep Title="Apply Changes" Width="150" Height="110" x:Name="wsApplyChanges" WorkDone="wsApplyChanges_WorkDone" />
                     </StackPanel>

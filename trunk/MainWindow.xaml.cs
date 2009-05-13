@@ -240,6 +240,13 @@ namespace TieCal
         {
             if (wsMergeEntries.WorkStage == WorkStepStage.Completed)
             {
+                if (_calendarMerger.ModifiedEntries.Count == 0)
+                {
+                    MessageBox.Show("Your calendars are already fully synchronized!");
+                    // Call the final workstage anyway to limit the amount of extra code paths (the workstage will complete instantly anyway)
+                    wsApplyChanges.StartWork(_calendarMerger.ModifiedEntries);
+                    return;
+                }
                 MergeWindow mergeWin = new MergeWindow(_calendarMerger.ModifiedEntries);
                 bool doMerge = (mergeWin.ShowDialog() == true);
                 if (doMerge && !DryRun)
