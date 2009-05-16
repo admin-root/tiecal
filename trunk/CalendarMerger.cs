@@ -26,7 +26,10 @@ namespace TieCal
             Worker.ReportProgress(0);
             mapping.Cleanup(NotesEntries, OutlookEntries);
             if (Worker.CancellationPending)
+            {
+                e.Cancel = true;
                 return;
+            }
             Worker.ReportProgress(10);
             var lowerLimit = DateTime.Now - TimeSpan.FromDays(30);
             var upperLimit = DateTime.Now + TimeSpan.FromDays(30);
@@ -34,21 +37,30 @@ namespace TieCal
                                  where calEntry.IsRepeating == false && calEntry.OccursInInterval(lowerLimit, upperLimit)
                                  select calEntry;
             if (Worker.CancellationPending)
+            {
+                e.Cancel = true;
                 return;
+            }
             Worker.ReportProgress(20);
             foreach (var calEntry in entriesToMerge)
                 calEntry.OutlookID = mapping.GetOutlookID(calEntry.NotesID);
             foreach (var calEntry in OutlookEntries)
                 calEntry.NotesID = mapping.GetNotesID(calEntry.OutlookID);
             if (Worker.CancellationPending)
+            {
+                e.Cancel = true;
                 return;
+            }
             Worker.ReportProgress(25);
             
             var newEntries = from notesEntry in entriesToMerge
                              where !(from outlookEntry in OutlookEntries select outlookEntry.NotesID).Contains(notesEntry.NotesID)
                              select new ModifiedEntry(notesEntry, Modification.New);
             if (Worker.CancellationPending)
+            {
+                e.Cancel = true;
                 return;
+            }
             Worker.ReportProgress(40);
 
             var changedEntries = from notesEntry in entriesToMerge
@@ -56,14 +68,20 @@ namespace TieCal
                                  where notesEntry.OutlookID == outlookEntry.OutlookID && notesEntry.DiffersFrom(outlookEntry)
                                  select new ModifiedEntry(notesEntry, Modification.Modified, notesEntry.GetDifferences(outlookEntry));
             if (Worker.CancellationPending)
+            {
+                e.Cancel = true;
                 return;
+            }
             Worker.ReportProgress(60);
 
             var oldEntries = from outlookEntry in OutlookEntries
                              where !(from notesEntry in entriesToMerge select notesEntry.OutlookID).Contains(outlookEntry.OutlookID)
                              select new ModifiedEntry(outlookEntry, Modification.Removed);
             if (Worker.CancellationPending)
+            {
+                e.Cancel = true;
                 return;
+            }
             Worker.ReportProgress(80);
 
             ModifiedEntries = new List<ModifiedEntry>(newEntries.Count() + changedEntries.Count() + oldEntries.Count());

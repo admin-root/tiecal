@@ -310,6 +310,7 @@ namespace TieCal
                     worker.ReportProgress(100 * row / entries.Count);
                     if (worker.CancellationPending)
                     {
+                        e.Cancel = true;
                         e.Result = calEntries;
                         return;
                     }

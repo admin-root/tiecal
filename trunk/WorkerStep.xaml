@@ -9,7 +9,8 @@
 	x:Name="UserControl"
 	d:DesignWidth="200" d:DesignHeight="200" Width="150" Height="110">
 	<UserControl.Resources>
-		<SolidColorBrush x:Key="doneBorderBrush" Color="#FF135C00" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <SolidColorBrush x:Key="doneBorderBrush" Color="#FF135C00" />
 		<SolidColorBrush x:Key="waitingBorderBrush" Color="#FF544B3B" />
 		<SolidColorBrush x:Key="workingBorderBrush" Color="#FFC27E05" />
 		<LinearGradientBrush x:Key="waitingBgBrush" EndPoint="0.5,1" StartPoint="0.5,0">
@@ -36,9 +37,10 @@
 				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
 			<TextBlock Text="{Binding Path=Title, ElementName=UserControl, Mode=Default}" TextWrapping="Wrap" FontWeight="Bold" d:LayoutOverrides="Height" Margin="3,2,0,2"/>
-			<Image HorizontalAlignment="Right" Margin="0,0,4,4" Width="48" Grid.Row="2" Source="{Binding Path=StatusImage, ElementName=UserControl}" x:Name="imgStatus" VerticalAlignment="Bottom"/>
 			<ProgressBar Grid.Row="1" VerticalAlignment="Center" Height="16" Margin="14,0,14,0" x:Name="pbar"/>
-		</Grid>
+            <Button Padding="4,0,4,0" Content="Abort" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="4" Grid.Row="2" x:Name="btnAbort" Click="btnAbort_Click" Visibility="{Binding Path=IsAbortable, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=UserControl, Mode=Default}" />
+            <Image HorizontalAlignment="Right" Margin="0,0,4,4" Width="48" Grid.Row="2" Source="{Binding Path=StatusImage, ElementName=UserControl}" x:Name="imgStatus" VerticalAlignment="Bottom"/>
+        </Grid>
 	</Border>
     <UserControl.Style>
         <Style TargetType="{x:Type local:WorkerStep}">

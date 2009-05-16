@@ -217,6 +217,27 @@ namespace TieCal
             settings.NotesDatabase = (string) cmbNotesDB.SelectedItem;
             UpdateIsReadyState();
         }
+        private void DisplaySynchronizationStatus(string title, string message, InfoBoxType type)
+        {
+            progressInfoBox.Title = title;
+            progressInfoBox.Message = message;
+            progressInfoBox.InfoBoxType = type;
+            progressInfoBox.ShowAndAutoClose();
+        }
+        private void DisplaySynchronizationStatus(WorkerStep ws)
+        {
+            switch (ws.WorkStage)
+            {
+                case WorkStepStage.Cancelled:
+                    DisplaySynchronizationStatus("Operation cancelled", "The synchronization was cancelled. No changes was written to Outlook", InfoBoxType.Warning);
+                    break;
+                case WorkStepStage.Failed:
+                    DisplaySynchronizationStatus("Error Reading Calendars", ws.ErrorMessage, InfoBoxType.Error);
+                    break;
+                default:
+                    return;
+            }
+        }
 
         private void wsReadCalendar_WorkDone(object sender, RoutedEventArgs e)
         {
@@ -230,8 +251,10 @@ namespace TieCal
                 }
                 else
                 {
-                    // We're done, we were either aborted or cancelled
-                    IsSynchronizing = false;
+                    if (wsReadNotes.WorkStage != WorkStepStage.Completed)
+                        DisplaySynchronizationStatus(wsReadNotes);
+                    else
+                        DisplaySynchronizationStatus(wsReadOutlook);
                 }
             }
         }
@@ -254,18 +277,33 @@ namespace TieCal
                     wsApplyChanges.StartWork(_calendarMerger.ModifiedEntries);
                 }
                 else
-                    IsSynchronizing = false;
+                {
+                    DisplaySynchronizationStatus("Merge cancelled", "The merge dialog was cancelled and thus no changes was written to Outlook", InfoBoxType.Warning);
+                }
             }
             else
             {
                 // Cancelled or failed
-                IsSynchronizing = false;
+                DisplaySynchronizationStatus(wsMergeEntries);
             }
         }
 
         private void wsApplyChanges_WorkDone(object sender, RoutedEventArgs e)
         {
-            _calendarMerger.SaveMappings();
+            if (wsApplyChanges.WorkStage == WorkStepStage.Completed)
+            {
+                _calendarMerger.SaveMappings();
+                progressInfoBox.Title = "Synchronization completed";
+                progressInfoBox.Message = "The synchronization has completed successfully. Now use iTunes to synchronize with the iPhone.";
+                progressInfoBox.ShowAndAutoClose();
+            }
+            else
+                // Cancelled or failed
+                DisplaySynchronizationStatus(wsApplyChanges);
+        }
+
+        private void progressInfoBox_MessageConfirmed(object sender, RoutedEventArgs e)
+        {
             IsSynchronizing = false;
         }
     }

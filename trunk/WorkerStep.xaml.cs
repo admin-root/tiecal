@@ -17,6 +17,22 @@ namespace TieCal
             add { AddHandler(WorkDoneEvent, value); }
             remove { RemoveHandler(WorkDoneEvent, value); }
         }
+        
+        public static readonly DependencyProperty IsAbortableProperty =
+            DependencyProperty.Register("IsAbortable", typeof(bool), typeof(WorkerStep), new UIPropertyMetadata(false));
+
+        public static readonly DependencyProperty TitleProperty =
+            DependencyProperty.Register("Title", typeof(string), typeof(WorkerStep), new UIPropertyMetadata("Working"));
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this workerstep can be aborted.
+        /// </summary>
+        public bool IsAbortable
+        {
+            get { return (bool)GetValue(IsAbortableProperty); }
+            set { SetValue(IsAbortableProperty, value); }
+        }
+
         /// <summary>
         /// Gets or sets the title of this work step. This is a dependency property
         /// </summary>
@@ -27,36 +43,24 @@ namespace TieCal
             set { SetValue(TitleProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Title.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register("Title", typeof(string), typeof(WorkerStep), new UIPropertyMetadata("Working"));
-
+        /// <summary>
+        /// Gets the current work stage.
+        /// </summary>
         public WorkStepStage WorkStage
         {
             get { return (WorkStepStage)GetValue(WorkStageProperty); }
             private set { SetValue(WorkStageKey, value); }
         }
 
-        private static readonly DependencyPropertyKey WorkStageKey =
-            DependencyProperty.RegisterReadOnly("WorkStage", typeof(WorkStepStage), typeof(WorkerStep), new UIPropertyMetadata(WorkStepStage.Waiting, new PropertyChangedCallback(WorkStage_Changed)));
-
-        public static readonly DependencyProperty WorkStageProperty = WorkStageKey.DependencyProperty;
-
-        //public Brush BorderBrush
-        //{
-        //    get { return (Brush)GetValue(BorderBrushProperty); }
-        //    set { SetValue(BorderBrushProperty, value); }
-        //}
-
-        //// Using a DependencyProperty as the backing store for BorderBrush.  This enables animation, styling, binding, etc...
-        //public static readonly DependencyProperty BorderBrushProperty =
-        //    DependencyProperty.Register("BorderBrush", typeof(Brush), typeof(WorkerStep), new UIPropertyMetadata(null));
-
         public Brush BorderBackground
         {
             get { return (Brush)GetValue(BorderBackgroundProperty); }
             set { SetValue(BorderBackgroundProperty, value); }
         }
+
+        private static readonly DependencyPropertyKey WorkStageKey = DependencyProperty.RegisterReadOnly("WorkStage", typeof(WorkStepStage), typeof(WorkerStep), new UIPropertyMetadata(WorkStepStage.Waiting, new PropertyChangedCallback(WorkStage_Changed)));
+
+        public static readonly DependencyProperty WorkStageProperty = WorkStageKey.DependencyProperty;
 
         // Using a DependencyProperty as the backing store for BorderBackgroundBrush.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty BorderBackgroundProperty =
@@ -106,7 +110,7 @@ namespace TieCal
             {
                 this.worker.RunWorkerCompleted -= worker_RunWorkerCompleted;
                 this.worker.ProgressChanged -= worker_ProgressChanged;
-            }
+            }            
             worker.ProgressChanged += new ProgressChangedEventHandler(worker_ProgressChanged);
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
             this.worker = worker;
@@ -148,6 +152,7 @@ namespace TieCal
         {
             if (worker == null)
                 throw new InvalidOperationException("No worker has been assigned to this WorkStep. Make sure you call SetupWorker before calling StartWork");
+            this.IsAbortable = worker.WorkerSupportsCancellation;
             worker.RunWorkerAsync(argument);
             WorkStage = WorkStepStage.Working;
         }
@@ -171,6 +176,11 @@ namespace TieCal
         void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             pbar.Value = e.ProgressPercentage;
+        }
+
+        private void btnAbort_Click(object sender, RoutedEventArgs e)
+        {
+            worker.CancelAsync();
         }
 	}
 

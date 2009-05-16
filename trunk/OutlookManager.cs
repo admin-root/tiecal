@@ -249,6 +249,7 @@ namespace TieCal
                     i++;
                     if (worker.CancellationPending)
                     {
+                        e.Cancel = true;
                         e.Result = calEntries;
                         return;
                     }
