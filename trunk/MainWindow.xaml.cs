@@ -224,6 +224,7 @@ namespace TieCal
             progressInfoBox.InfoBoxType = type;
             progressInfoBox.ShowAndAutoClose();
         }
+
         private void DisplaySynchronizationStatus(WorkerStep ws)
         {
             switch (ws.WorkStage)

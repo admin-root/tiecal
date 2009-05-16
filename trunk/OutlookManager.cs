@@ -17,6 +17,7 @@ namespace TieCal
         public OutlookManager()
         {
             outlookApp = new ApplicationClass();
+            CalendarAppVersion = outlookApp.Version;
             FetchCalendarWorker = new BackgroundWorker();
             FetchCalendarWorker.WorkerReportsProgress = true;
             FetchCalendarWorker.WorkerSupportsCancellation = true;
@@ -283,8 +284,17 @@ namespace TieCal
             private set;
         }
 
+        /// <summary>
+        /// Gets the number of calendar entries that was skipped while reading the calendar.
+        /// </summary>
+        /// <value>The number of skipped entries.</value>
         public int NumberOfSkippedEntries { get; private set; }
-        
+
+        /// <summary>
+        /// Gets the Microsoft Outlook version.
+        /// </summary>
+        /// <value>The version reported from the calendar application.</value>
+        public string CalendarAppVersion { get; private set; }
         #endregion
     }
 }
