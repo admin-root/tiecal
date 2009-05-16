@@ -306,6 +306,11 @@ namespace TieCal
         {
             IsSynchronizing = false;
         }
+
+        private void btnQuit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 
     /// <summary>

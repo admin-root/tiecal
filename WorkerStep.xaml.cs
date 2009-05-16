@@ -4,6 +4,7 @@ using System.Windows;
 using System.ComponentModel;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Windows.Data;
 
 namespace TieCal
 {
@@ -25,7 +26,7 @@ namespace TieCal
             DependencyProperty.Register("Title", typeof(string), typeof(WorkerStep), new UIPropertyMetadata("Working"));
 
         /// <summary>
-        /// Gets or sets a value indicating whether this workerstep can be aborted.
+        /// Gets or sets a value indicating whether this workerstep can be aborted. This is a dependency property
         /// </summary>
         public bool IsAbortable
         {
@@ -44,7 +45,7 @@ namespace TieCal
         }
 
         /// <summary>
-        /// Gets the current work stage.
+        /// Gets the current work stage. This is a dependency property.
         /// </summary>
         public WorkStepStage WorkStage
         {
@@ -52,6 +53,10 @@ namespace TieCal
             private set { SetValue(WorkStageKey, value); }
         }
 
+        /// <summary>
+        /// Gets or sets the border background. This is a dependency property.
+        /// </summary>
+        /// <value>The border background.</value>
         public Brush BorderBackground
         {
             get { return (Brush)GetValue(BorderBackgroundProperty); }
@@ -66,6 +71,10 @@ namespace TieCal
         public static readonly DependencyProperty BorderBackgroundProperty =
             DependencyProperty.Register("BorderBackground", typeof(Brush), typeof(WorkerStep), new UIPropertyMetadata(null));
 
+        /// <summary>
+        /// Gets or sets the status image to display in the box. This is a dependency property.
+        /// </summary>
+        /// <value>The status image.</value>
         public ImageSource StatusImage
         {
             get { return (ImageSource)GetValue(StatusImageProperty); }
@@ -180,7 +189,8 @@ namespace TieCal
 
         private void btnAbort_Click(object sender, RoutedEventArgs e)
         {
-            worker.CancelAsync();
+            if (worker.IsBusy)
+                worker.CancelAsync();
         }
 	}
 
@@ -192,4 +202,25 @@ namespace TieCal
         Failed,
         Completed
     }
+
+    public class WorkStepStageToEnabledConverter : IValueConverter
+    {
+        #region IValueConverter Members
+
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            WorkStepStage stage = (WorkStepStage)value;
+            if (stage == WorkStepStage.Working)
+                return true;
+            return false;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
 }
