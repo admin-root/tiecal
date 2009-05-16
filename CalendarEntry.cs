@@ -8,8 +8,17 @@ using Microsoft.Office.Interop.Outlook;
 
 namespace TieCal
 {    
+    /// <summary>
+    /// Application neutral class that represents a calendar entry.
+    /// </summary>
     public class CalendarEntry
     {
+        private DateTime _endTime;
+        private DateTime _startTime;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CalendarEntry"/> class.
+        /// </summary>
         public CalendarEntry()
         {
             Participants = new List<string>();
@@ -18,6 +27,11 @@ namespace TieCal
             OptionalParticipants = new List<string>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CalendarEntry"/> class. 
+        /// </summary>
+        /// <param name="copy">The calendar entry to copy information from.</param>
+        /// <param name="newStartTime">The new start time to use for the created calendar entry.</param>
         public CalendarEntry(CalendarEntry copy, DateTime newStartTime)
             : this()
         {
@@ -33,7 +47,6 @@ namespace TieCal
             OutlookID = copy.OutlookID;
             IsAllDay = copy.IsAllDay;
             Location = copy.Location;
-
         }
 
         /// <summary>
@@ -84,31 +97,45 @@ namespace TieCal
                     return zone;
             return TimeZoneInfo.Utc;
         }
+        /// <summary>
+        /// Sets the <see cref="StartTimeZone"/> from a UTC offset.
+        /// </summary>
         public void SetStartTimeZoneFromOffset(TimeSpan offset)
         {
             StartTimeZone = GetTimeZoneInfoFromOffset(offset);
         }
 
+        /// <summary>
+        /// Sets the <see cref="EndTimeZone"/> from a UTC offset.
+        /// </summary>
         public void SetEndTimeZoneFromOffset(TimeSpan offset)
         {
             EndTimeZone = GetTimeZoneInfoFromOffset(offset);
         }
 
-        public IEnumerable<CalendarEntry> GetRepeatingEntries()
-        {
-            List<CalendarEntry> lst = new List<CalendarEntry>();
-            if (!this.IsRepeating)
-                return lst;
-            foreach (DateTime repeatTime in Occurrences)
-                lst.Add(new CalendarEntry(this, repeatTime));
-            return lst;
-        }
-
+        /// <summary>
+        /// Gets or sets the person this entry originates from.
+        /// </summary>
         public string From { get; set; }
+        /// <summary>
+        /// Gets or sets the list of categories this entry belongs to.
+        /// </summary>
         public List<string> Categories { get; set; }
+        /// <summary>
+        /// Gets or sets the ID this entry has in Outlook. This property is only set after entries has been read from Outlook or this entry has been successfully merged with Outlook.
+        /// </summary>
         public string OutlookID { get; set; }
+        /// <summary>
+        /// Gets or sets the ID this entry has in Lotus Notes. This property is only set for items read from the <see cref="NotesReader"/> class.
+        /// </summary>
         public string NotesID { get; set; }
+        /// <summary>
+        /// Gets or sets the subject/title of the calendar entry.
+        /// </summary>
         public string Subject { get; set; }
+        /// <summary>
+        /// Gets or sets the full description of the calendar entry.
+        /// </summary>
         public string Body { get; set; }
         /// <summary>
         /// Gets or sets the location where the meeting is.
@@ -122,23 +149,29 @@ namespace TieCal
         /// Gets or sets the list of optional participants.
         /// </summary>
         public List<string> OptionalParticipants { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether this calendar entry is an all day event.
+        /// </summary>
         public bool IsAllDay { get; set; }
+        /// <summary>
+        /// Gets or sets the list of dates when this entry occurrs. For non-repeating events, this contains only one item (the <see cref="StartTime"/>)
+        /// </summary>
         public List<DateTime> Occurrences { get; set; }
         /// <summary>
         /// Gets the duration of the meeting.
         /// </summary>
         public TimeSpan Duration { get { return EndTime - StartTime; } }
+        /// <summary>
+        /// Gets a value indicating whether this calendar entry is a repeating event. To get the repeating events, either look at the <see cref="Occurrences"/> property or use the <see cref="RepeatPatternAnalyzer"/> to get a proper repeat pattern.
+        /// </summary>
         public bool IsRepeating { get { return Occurrences.Count > 1; } }
-        private DateTime _startTime;
         /// <summary>
         /// Gets or sets the time zone that the <see cref="StartTime"/> is expressed in
         /// </summary>
-        /// <value>The start time zone.</value>
         public TimeZoneInfo StartTimeZone { get; set; }
         /// <summary>
         /// Gets or sets the time zone that the <see cref="EndTime"/> is expressed in.
         /// </summary>
-        /// <value>The end time zone.</value>
         public TimeZoneInfo EndTimeZone { get; set; }
         
         /// <summary>
@@ -146,7 +179,6 @@ namespace TieCal
         /// </summary>
         /// <value>The start time, in UTC.</value>
         public DateTime StartTime { get { return _startTime; } set { _startTime = value; } }
-        private DateTime _endTime;
         /// <summary>
         /// Gets or sets the end time. This should always be in UTC time
         /// </summary>
@@ -197,6 +229,11 @@ namespace TieCal
             return !EquivalentTo(other);
         }
 
+        /// <summary>
+        /// Gets the list of properties that are different between this calendar entry and the <paramref name="other"/>.
+        /// </summary>
+        /// <param name="other">The calendar entry to compare against.</param>
+        /// <returns>A list of property names that differ</returns>
         public List<string> GetDifferences(CalendarEntry other)
         {
             List<string> diffs = new List<string>();
@@ -214,27 +251,13 @@ namespace TieCal
                 diffs.Add("Location");
             return diffs;
         }
+
+        /// <summary>
+        /// Gets a string representation of this calendar entry.
+        /// </summary>        
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Subject: " + Subject);
-            sb.AppendLine("From: " + From);
-            sb.Append("Categories: ");
-            foreach (string cat in Categories)
-                sb.Append(cat + ", ");
-            sb.AppendLine();
-            sb.AppendLine("Location: " + Location);
-            sb.AppendLine("Start: " + StartTime);
-            sb.AppendLine("End:   " + EndTime);
-            sb.AppendLine("Notes ID: " + NotesID);
-            sb.AppendLine("Outlook ID: " + OutlookID);
-            sb.AppendLine("Num Participants: " + Participants.Count);
-            sb.AppendLine("Num Opt. Participants: " + OptionalParticipants.Count);
-            sb.AppendLine("Repeating: " + IsRepeating);
-            if (IsRepeating)
-                sb.AppendLine(" Number of repeats: " + Occurrences.Count);
-            
-            return sb.ToString();
+            return Subject;
         }
     }
 
@@ -244,6 +267,11 @@ namespace TieCal
     public class RepeatPatternAnalyzer
     {
         private IList<DateTime> Occurrences { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RepeatPatternAnalyzer"/> class by analyizing the list of occurrences.
+        /// </summary>
+        /// <param name="occurrences">The occurrences to analyze in order to calculate the repeat pattern.</param>
         public RepeatPatternAnalyzer(IList<DateTime> occurrences)
         {
             if (occurrences.Count < 2)
@@ -297,13 +325,16 @@ namespace TieCal
             }
         }
         public int NumRepeats { get { return Occurrences.Count; } }
-        public bool SameMinute { get; private set; }
-        public bool SameHour { get; private set; }
-        public bool SameTime { get { return SameMinute && SameHour; } }
-        public bool SameDayOfMonth { get; private set; }
-        public bool SameDayOfWeek { get; private set; }
-        public bool SameMonth { get; private set; }
+        private bool SameMinute { get; set; }
+        private bool SameHour { get; set; }
+        private bool SameTime { get { return SameMinute && SameHour; } }
+        private bool SameDayOfMonth { get; set; }
+        private bool SameDayOfWeek { get; set; }
+        private bool SameMonth { get; set; }
 
+        /// <summary>
+        /// Gets a value indicating whether this is a yearly event.
+        /// </summary>
         public bool IsYearly
         {
             get
@@ -317,6 +348,9 @@ namespace TieCal
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this is a monthly event.
+        /// </summary>
         public bool IsMonthly
         {
             get
@@ -330,6 +364,9 @@ namespace TieCal
                 return true;
             }
         }
+        /// <summary>
+        /// Gets a value indicating whether this is a weekly event.
+        /// </summary>
         public bool IsWeekly
         {
             get
@@ -342,6 +379,9 @@ namespace TieCal
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this is a daily event.
+        /// </summary>
         public bool IsDaily
         {
             get
@@ -373,7 +413,7 @@ namespace TieCal
                 sb.Append("Yearly event.");
             if (sb.Length == 0)
                 sb.Append("Unknown repeat pattern");
-            sb.AppendFormat("{0} occurences, interval: {1}", NumRepeats, Interval);
+            sb.AppendFormat("{0} occurrences, interval: {1}", NumRepeats, Interval);
 
             return sb.ToString();
         }
