@@ -52,8 +52,8 @@
 			<BeginStoryboard Storyboard="{StaticResource OnSynchronizationEnded1}" x:Name="OnSynchronizationEnded1_BeginStoryboard"/>
 		</EventTrigger>
 	</Window.Triggers>
-	<DockPanel Margin="8,8,8,8">
-		<Expander x:Name="expSettings" DockPanel.Dock="Top" IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" BorderBrush="#FF000742" Background="#FFFFFFFF">
+	<DockPanel Margin="0,0,0,0">
+		<Expander x:Name="expSettings" DockPanel.Dock="Top" IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" BorderBrush="#FF000742" Background="#FFFFFFFF" Margin="8,8,8,0">
 			<Expander.Header>
 				<TextBlock Text="Settings" FontWeight="Bold" />
 			</Expander.Header>
@@ -76,10 +76,12 @@
 				<ComboBox Margin="4" Grid.Column="1" Grid.Row="1" x:Name="cmbNotesDB" VerticalAlignment="Top" SelectionChanged="cmbNotesDB_SelectionChanged" ToolTip="Select the notes database containing your calendar. This is usually one named 'mail\yourname.nsf'"/>
 			</Grid>
 		</Expander>
-		<StackPanel x:Name="pnlActionButtons" Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" Margin="8,8,8,8">
-			<CheckBox Content="Dry Run (don't write changes to Outlook)" IsChecked="{Binding Path=DryRun, ElementName=window}" VerticalAlignment="Center" Margin="0,0,24,0" />
-			<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}"/>
-		</StackPanel>
+		<Border DockPanel.Dock="Bottom" x:Name="bdActionButtons" Background="#FFFFFFFF" BorderBrush="#FF000000" BorderThickness="0,1,0,0">
+			<UniformGrid IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" HorizontalAlignment="Right" Margin="0,8,12,8" Rows="1">
+				<Button x:Name="btnQuit" Content="Quit" Click="btnQuit_Click" Margin="4,4,4,4" IsCancel="True" ToolTip="Quits the application"/>
+				<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}" Padding="14,3,14,3" Margin="4,4,4,4" IsDefault="True" ToolTip="Starts the synchronization"/>
+			</UniformGrid>
+		</Border>
 		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8">
 			<Border x:Name="progressBorder" BorderBrush="#FF010960" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" Padding="3,3,3,3" Visibility="Visible">
 				<Border.Background>

@@ -5,7 +5,7 @@
     Title="TesterWindow" Height="300" Width="300" xmlns:TieCal="clr-namespace:TieCal">
     <Grid>
         
-    	<TieCal:InfoBox Margin="13,16,22,131" ShowConfirmButton="True" Message="Hello There" InfoBoxType="Warning"/>
+    	<TieCal:InfoBox ShowConfirmButton="True" Message="Hello There" InfoBoxType="Warning" Margin="7,8,6,21"/>
         
     </Grid>
 </Window>
