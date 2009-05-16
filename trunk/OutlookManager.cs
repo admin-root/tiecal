@@ -187,6 +187,7 @@ namespace TieCal
             var calendarFolder = GetCalendarFolder();
             int count = changedEntries.Count();
             int num = 0;
+            NumberOfMergedEntries = 0;
             foreach (var modification in changedEntries)
             {
                 MergeCalendarWorker.ReportProgress((num++ * 100) / count);
@@ -198,17 +199,20 @@ namespace TieCal
                     {
                         AppointmentItem olItem = GetExistingAppointmentItem(modification.Entry.OutlookID, calendarFolder);
                         UpdateEntry(olItem, modification.Entry);
+                        NumberOfMergedEntries++;
                     }
                     else if (modification.Modification == Modification.New)
                     {
                         var olItem = (AppointmentItem)calendarFolder.Items.Add(OlItemType.olAppointmentItem);
                         UpdateEntry(olItem, modification.Entry);
                         modification.Entry.OutlookID = olItem.GlobalAppointmentID;
+                        NumberOfMergedEntries++;
                     }
                     else if (modification.Modification == Modification.Removed)
                     {
                         var olItem = GetExistingAppointmentItem(modification.Entry.OutlookID, calendarFolder);
                         olItem.Delete();
+                        NumberOfMergedEntries++;
                     }
                     else
                     {
@@ -224,6 +228,7 @@ namespace TieCal
 
         public BackgroundWorker MergeCalendarWorker { get; private set; }
 
+        public int NumberOfMergedEntries { get; private set; }
         #region ICalendarReader Members
         /// <summary>
         /// Gets the background worker used to fetch calendar entries in the background.
@@ -234,6 +239,7 @@ namespace TieCal
         void FetchCalendarWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = (BackgroundWorker)sender;
+            NumberOfSkippedEntries = 0;
             worker.ReportProgress(0);
             List<CalendarEntry> calEntries = new List<CalendarEntry>();
             try
@@ -246,6 +252,8 @@ namespace TieCal
                     if (calEntry.OutlookID != null)
                         // TODO: report error when that mechanism exists
                         calEntries.Add(calEntry);
+                    else
+                        NumberOfSkippedEntries++;
                     i++;
                     if (worker.CancellationPending)
                     {
@@ -275,6 +283,8 @@ namespace TieCal
             private set;
         }
 
+        public int NumberOfSkippedEntries { get; private set; }
+        
         #endregion
     }
 }

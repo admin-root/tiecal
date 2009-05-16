@@ -296,6 +296,7 @@ namespace TieCal
             //}
             worker.ReportProgress(0);
             List<CalendarEntry> calEntries = new List<CalendarEntry>();
+            NumberOfSkippedEntries = 0;
             try
             {
                 var session = CreateNotesSession();
@@ -321,6 +322,8 @@ namespace TieCal
                     CalendarEntry calEntry = CreateCalendarEntry(viewEntry);
                     if (calEntry != null)
                         calEntries.Add(calEntry);
+                    else
+                        NumberOfSkippedEntries++;
                 }
                 e.Result = calEntries;
                 CalendarEntries = calEntries;
@@ -341,6 +344,7 @@ namespace TieCal
             private set { _calendarEntries = (List<CalendarEntry>)value; }
         }
 
+        public int NumberOfSkippedEntries { get; private set; }
         #endregion
     }
 }

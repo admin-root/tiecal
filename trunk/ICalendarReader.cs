@@ -14,6 +14,7 @@ namespace TieCal
         /// <value>The calendar entries.</value>
         IEnumerable<CalendarEntry> CalendarEntries { get; }
 
+        int NumberOfSkippedEntries { get; }
         /// <summary>
         /// Gets the background worker used to fetch calendar entries in the background.
         /// </summary>
