@@ -33,6 +33,7 @@ namespace TieCal
         {
             var session = new NotesSessionClass();
             session.Initialize(Password);
+            CalendarAppVersion = session.NotesVersion;
             return session;
         }
 
@@ -338,13 +339,27 @@ namespace TieCal
             }
         }
 
+        /// <summary>
+        /// Gets or sets the calendar entries.
+        /// </summary>
+        /// <value>The calendar entries.</value>
         public IEnumerable<CalendarEntry> CalendarEntries
         {
             get { return _calendarEntries; }
             private set { _calendarEntries = (List<CalendarEntry>)value; }
         }
 
+        /// <summary>
+        /// Gets the number of calendar entries that was skipped while reading the calendar.
+        /// </summary>
+        /// <value>The number of skipped entries.</value>
         public int NumberOfSkippedEntries { get; private set; }
+
+        /// <summary>
+        /// Gets the version of Lotus Notes that is installed
+        /// </summary>
+        public string CalendarAppVersion { get; private set; }
+        
         #endregion
     }
 }

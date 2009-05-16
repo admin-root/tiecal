@@ -353,7 +353,29 @@ namespace TieCal
                 
                 return true;
             }
+        }
 
+        /// <summary>
+        /// Returns a <see cref="T:System.String"/> that represents the current repeat pattern.
+        /// </summary>
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            if (!IsValid)
+                return "Invalid Repeat Pattern";
+            if (IsDaily)
+                sb.Append("Daily event.");
+            if (IsWeekly)
+                sb.Append("Weekly event.");
+            if (IsMonthly)
+                sb.Append("Monthly event.");
+            if (IsYearly)
+                sb.Append("Yearly event.");
+            if (sb.Length == 0)
+                sb.Append("Unknown repeat pattern");
+            sb.AppendFormat("{0} occurences, interval: {1}", NumRepeats, Interval);
+
+            return sb.ToString();
         }
     }
 }
