@@ -90,8 +90,9 @@
 				</Border.Background>
 				<Grid Margin="4,4,4,4">
 					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto" />
 						<RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto" />
 					</Grid.RowDefinitions>
 					<TextBlock Text="Synchronizing Calendars" FontSize="16" FontStyle="Normal" FontWeight="Bold" d:LayoutOverrides="Height" Margin="4,4,4,4"/>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1" Orientation="Horizontal" Margin="4,4,4,4">
@@ -104,6 +105,7 @@
                     	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
                     	<local:WorkerStep Title="Apply Changes" Width="150" Height="110" x:Name="wsApplyChanges" WorkDone="wsApplyChanges_WorkDone" />
                     </StackPanel>
+                    <local:InfoBox x:Name="progressInfoBox" MessageConfirmed="progressInfoBox_MessageConfirmed" InfoBoxType="Error" IconSize="24" Visibility="Collapsed" Grid.Row="2" />
                 </Grid>
 			</Border>
 			<Border x:Name="welcomeBorder" CornerRadius="3,3,3,3" BorderThickness="1,1,1,1" BorderBrush="#FF135C00">

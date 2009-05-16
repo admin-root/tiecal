@@ -67,24 +67,22 @@
             </DataTemplate.Triggers>
         </DataTemplate>
         <ControlTemplate x:Key="ModBoxTemplate">
-            <Border x:Name="bd" Margin="8" CornerRadius="2" BorderThickness="1" Padding="4">
-                <TextBlock x:Name="txtMessage" TextWrapping="Wrap" />
-            </Border>
+            <local:InfoBox IconSize="24" InfoBoxType="Custom" x:Name="infoBox" />
             <ControlTemplate.Triggers>
                 <DataTrigger Binding="{Binding Path=Modification}" Value="Modified">
-                    <Setter Property="Text" TargetName="txtMessage" Value="This entry exists in Outlook but has been modified since last sync. Changes will be saved to Outlook." />
-                    <Setter Property="Background" TargetName="bd" Value="{StaticResource modifiedEntryBrush}" />
-                    <Setter Property="BorderBrush" TargetName="bd" Value="Black" />
+                    <Setter Property="Icon" TargetName="infoBox" Value="Images/Edit-64.png" />
+                    <Setter Property="Message" TargetName="infoBox" Value="This entry exists in Outlook but has been modified since last sync. Changes will be saved to Outlook." />
+                    <Setter Property="Background" TargetName="infoBox" Value="{StaticResource modifiedEntryBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Modification}" Value="New">
-                    <Setter Property="Text" TargetName="txtMessage" Value="This entry is new in Lotus Notes and has not been synchronized before. It will be created in Outlook." />
-                    <Setter Property="Background" TargetName="bd" Value="{StaticResource newEntryBrush}" />
-                    <Setter Property="BorderBrush" TargetName="bd" Value="Black" />
+                    <Setter Property="Icon" TargetName="infoBox" Value="Images/Add-64.png" />
+                    <Setter Property="Message" TargetName="infoBox" Value="This entry is new in Lotus Notes and has not been synchronized before. It will be created in Outlook." />
+                    <Setter Property="Background" TargetName="infoBox" Value="{StaticResource newEntryBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Modification}" Value="Removed">
-                    <Setter Property="Text" TargetName="txtMessage" Value="This entry has either been removed in Notes, is too old or has never existed in Lotus Notes. It will be deleted from Outlook." />
-                    <Setter Property="Background" TargetName="bd" Value="{StaticResource oldEntryBrush}" />
-                    <Setter Property="BorderBrush" TargetName="bd" Value="Black" />
+                    <Setter Property="Icon" TargetName="infoBox" Value="Images/trash-64.png" />
+                    <Setter Property="Message" TargetName="infoBox" Value="This entry has either been removed in Notes, is too old or has never existed in Lotus Notes. It will be deleted from Outlook." />
+                    <Setter Property="Background" TargetName="infoBox" Value="{StaticResource oldEntryBrush}" />
                 </DataTrigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
