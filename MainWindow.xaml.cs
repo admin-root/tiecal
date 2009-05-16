@@ -293,8 +293,18 @@ namespace TieCal
             if (wsApplyChanges.WorkStage == WorkStepStage.Completed)
             {
                 _calendarMerger.SaveMappings();
+                progressInfoBox.InfoBoxType = InfoBoxType.Info;
                 progressInfoBox.Title = "Synchronization completed";
-                progressInfoBox.Message = "The synchronization has completed successfully. Now use iTunes to synchronize with the iPhone.";
+                var sb = new StringBuilder();
+                sb.AppendFormat("A total of {0} (of {1} available modifications) was successfully merged with the Outlook calendar", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count); 
+                if (_notesReader.NumberOfSkippedEntries > 0)
+                    sb.AppendFormat("{0} calendar entries from Lotus Notes was skipped.", _notesReader.NumberOfSkippedEntries);
+                if (_outlookManager.NumberOfSkippedEntries > 0)
+                    sb.AppendFormat("{0} calendar entries from Outlook was ignored.", _outlookManager.NumberOfSkippedEntries);
+                
+                sb.AppendLine();
+                sb.Append("You can now use iTunes to synchronize the Outlook calendar with your iPhone.");
+                progressInfoBox.Message = sb.ToString();
                 progressInfoBox.ShowAndAutoClose();
             }
             else
