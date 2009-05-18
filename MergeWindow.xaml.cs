@@ -117,4 +117,34 @@ namespace TieCal
         #endregion
     }
 
+    internal class ModificationTypeToImageConverter : IValueConverter
+    {
+        private static ImageSource[] sources = null;
+
+        public ModificationTypeToImageConverter()
+        {
+            if (sources == null)
+            {
+                sources = new ImageSource[3];
+                sources[(int)Modification.New] = new BitmapImage(new Uri("pack://application:,,,/Images/Add-64.png", UriKind.Absolute));
+                sources[(int)Modification.Modified] = new BitmapImage(new Uri("pack://application:,,,/Images/Edit-64.png", UriKind.Absolute));
+                sources[(int)Modification.Removed] = new BitmapImage(new Uri("pack://application:,,,/Images/trash-64.png", UriKind.Absolute));
+            }
+        }
+        #region IValueConverter Members
+        
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            Modification mod = (Modification)value;
+            return sources[(int)mod];
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
 }
