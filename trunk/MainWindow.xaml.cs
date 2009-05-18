@@ -44,20 +44,6 @@ namespace TieCal
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to run in simulation mode (no changes written to any calendar). This is a dependency property.
-        /// </summary>
-        [Description("Gets or sets a value indicating whether to run in simulation mode (no changes written to any calendar).")]
-        public bool DryRun
-        {
-            get { return (bool)GetValue(DryRunProperty); }
-            set { SetValue(DryRunProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for DryRun.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty DryRunProperty =
-            DependencyProperty.Register("DryRun", typeof(bool), typeof(MainWindow), new UIPropertyMetadata(false));
-
-        /// <summary>
         /// Gets or sets a value indicating whether this instance is ready to synchronize the calendars.
         /// </summary>
         /// <value>
@@ -155,14 +141,11 @@ namespace TieCal
                 RefreshNotesDatabases();
             else
                 expSettings.IsExpanded = true;
-            DryRun = settings.DryRun;
             UpdateIsReadyState();
-            //new MergeWindow(new List<ModifiedEntry>()).Show();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            settings.DryRun = DryRun;
             settings.NotesDatabase = (string)cmbNotesDB.SelectedItem;
             settings.NotesPassword = txtNotesPassword.Password;
             settings.Save();
@@ -279,7 +262,7 @@ namespace TieCal
                 }
                 MergeWindow mergeWin = new MergeWindow(_calendarMerger.ModifiedEntries);
                 bool doMerge = (mergeWin.ShowDialog() == true);
-                if (doMerge && !DryRun)
+                if (doMerge)
                 {
                     wsApplyChanges.StartWork(_calendarMerger.ModifiedEntries);
                 }
