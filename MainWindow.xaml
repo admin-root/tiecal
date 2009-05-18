@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     x:Class="TieCal.MainWindow"
     Title="TieCal Synchronizer" x:Name="window" 
-    xmlns:local="clr-namespace:TieCal" Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" Width="662" Height="476" Icon="Images\tiecal.ico">
+    xmlns:local="clr-namespace:TieCal" Width="800" Height="600" Icon="Images\tiecal.ico">
 	<Window.Resources>
 		<local:BoolToOppositeBoolConverter x:Key="BoolToOppositeBoolConverter"/>
 		<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -76,10 +76,10 @@
 				<ComboBox Margin="4" Grid.Column="1" Grid.Row="1" x:Name="cmbNotesDB" VerticalAlignment="Top" SelectionChanged="cmbNotesDB_SelectionChanged" ToolTip="Select the notes database containing your calendar. This is usually one named 'mail\yourname.nsf'"/>
 			</Grid>
 		</Expander>
-		<Border DockPanel.Dock="Bottom" x:Name="bdActionButtons" Background="#FFFFFFFF" BorderBrush="#FF000000" BorderThickness="0,1,0,0">
-			<UniformGrid IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" HorizontalAlignment="Right" Margin="0,8,12,8" Rows="1">
-				<Button x:Name="btnQuit" Content="Quit" Click="btnQuit_Click" Margin="4,4,4,4" IsCancel="True" ToolTip="Quits the application"/>
-				<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}" Padding="14,3,14,3" Margin="4,4,4,4" IsDefault="True" ToolTip="Starts the synchronization"/>
+		<Border DockPanel.Dock="Bottom" x:Name="bdActionButtons" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" BorderBrush="#FF000000" BorderThickness="0,1,0,0">
+			<UniformGrid IsEnabled="{Binding Path=IsSynchronizing, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" HorizontalAlignment="Right" Margin="0,8,12,8" Rows="1">
+				<Button x:Name="btnQuit" Content="Quit" Click="btnQuit_Click" Margin="4,0,4,0" IsCancel="True" ToolTip="Quits the application"/>
+				<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}" Padding="14,3,14,3" Margin="4,0,4,0" IsDefault="True" ToolTip="Starts the synchronization"/>
 			</UniformGrid>
 		</Border>
 		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8">

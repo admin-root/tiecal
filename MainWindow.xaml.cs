@@ -30,6 +30,8 @@ namespace TieCal
     public partial class MainWindow : Window
     {
         #region Dependency Properties
+        public static readonly DependencyProperty IsSynchronizingProperty =
+                DependencyProperty.Register("IsSynchronizing", typeof(bool), typeof(MainWindow), new UIPropertyMetadata(false, new PropertyChangedCallback(IsSynchronizingProperty_Changed)));
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance is busy working with calendar synchronization. This is a dependency property.
@@ -40,10 +42,6 @@ namespace TieCal
             get { return (bool)GetValue(IsSynchronizingProperty); }
             set { SetValue(IsSynchronizingProperty, value); }
         }
-
-        // Using a DependencyProperty as the backing store for IsWorking.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty IsSynchronizingProperty =
-            DependencyProperty.Register("IsSynchronizing", typeof(bool), typeof(MainWindow), new UIPropertyMetadata(false, new PropertyChangedCallback(IsSynchronizingProperty_Changed)));
 
         /// <summary>
         /// Gets or sets a value indicating whether to run in simulation mode (no changes written to any calendar). This is a dependency property.
@@ -181,7 +179,7 @@ namespace TieCal
 
         private void BeginFetchCalendarEntries()
         {
-            IsSynchronizing = true;
+            IsSynchronizing = true;           
             ResetWorkSteps();
             wsReadNotes.StartWork();
             wsReadOutlook.StartWork();
