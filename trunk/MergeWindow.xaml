@@ -5,6 +5,8 @@
     Title="Modified Calendar Entries" Width="800" Height="600" Icon="Images\tiecal.ico">
     <Window.Resources>
         <local:EntryToDurationConverter x:Key="EntryToDurationConverter" />
+        <local:ModificationTypeToImageConverter x:Key="ModificationTypeToImageConverter" />
+        
         <LinearGradientBrush x:Key="newEntryBrush" EndPoint="1,0.5" StartPoint="0,0.5">
             <GradientStop Color="#FFDBFCB9" Offset="0"/>
             <GradientStop Color="#FFFFFFFF" Offset="1"/>
@@ -30,12 +32,13 @@
             			<TextBlock Text="{Binding Path=Entry.Subject}" Margin="-4,0,0,0" FontWeight="Bold" TextWrapping="Wrap" MinWidth="150" />
             			<TextBlock Text="{Binding Path=Entry.Location, Mode=Default}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path=Entry.Location, Mode=Default}"/>
             			<StackPanel Orientation="Horizontal">
-            				<TextBlock Text="Time: " Foreground="#FF606060" Width="50" />
+            				<TextBlock Text="Time: " Foreground="#FF606060" />
             				<TextBlock Text="{Binding Path=Entry, Converter={StaticResource EntryToDurationConverter}}" />
             			</StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Type: " Foreground="#FF606060" Width="50" />
-                            <TextBlock Text="{Binding Path=Modification}" />
+                            <Image Source="{Binding Path=Modification, Converter={StaticResource ModificationTypeToImageConverter}}" Width="24" Height="24" Margin="2" />
+                            <TextBlock Text="Modification Type: " Foreground="#FF606060" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Path=Modification}" VerticalAlignment="Center" />
                         </StackPanel>
                         <StackPanel x:Name="pnlChangedFields" Visibility="Collapsed">
             				<TextBlock Width="50" Text="Changes:" Foreground="#FF606060" ToolTip="List of items in this entry that has changed since last sync"/>
@@ -67,7 +70,7 @@
             </DataTemplate.Triggers>
         </DataTemplate>
         <ControlTemplate x:Key="ModBoxTemplate">
-            <local:InfoBox IconSize="24" InfoBoxType="Custom" BorderBrush="#FF1E2769" BorderThickness="1" x:Name="infoBox" >
+            <local:InfoBox IconSize="24" Icon="{Binding Path=Modification, Converter={StaticResource ModificationTypeToImageConverter}}" InfoBoxType="Custom" BorderBrush="#FF1E2769" BorderThickness="1" x:Name="infoBox" >
             	<local:InfoBox.Background>
             		<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
             			<GradientStop Color="#FFE8EBFB" Offset="0"/>
@@ -78,17 +81,14 @@
             </local:InfoBox>
             <ControlTemplate.Triggers>
                 <DataTrigger Binding="{Binding Path=Modification}" Value="Modified">
-                    <Setter Property="Icon" TargetName="infoBox" Value="Images/Edit-64.png" />
                     <Setter Property="Message" TargetName="infoBox" Value="This entry exists in Outlook but has been modified since last sync. Changes will be saved to Outlook." />
                     <Setter Property="Background" TargetName="infoBox" Value="{StaticResource modifiedEntryBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Modification}" Value="New">
-                    <Setter Property="Icon" TargetName="infoBox" Value="Images/Add-64.png" />
                     <Setter Property="Message" TargetName="infoBox" Value="This entry is new in Lotus Notes and has not been synchronized before. It will be created in Outlook." />
                     <Setter Property="Background" TargetName="infoBox" Value="{StaticResource newEntryBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Modification}" Value="Removed">
-                    <Setter Property="Icon" TargetName="infoBox" Value="Images/trash-64.png" />
                     <Setter Property="Message" TargetName="infoBox" Value="This entry has either been removed in Notes, is too old or has never existed in Lotus Notes. It will be deleted from Outlook." />
                     <Setter Property="Background" TargetName="infoBox" Value="{StaticResource oldEntryBrush}" />
                 </DataTrigger>

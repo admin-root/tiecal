@@ -14,7 +14,11 @@
 				<SplineDoubleKeyFrame KeyTime="00:00:00" Value="1"/>
 				<SplineDoubleKeyFrame KeyTime="00:00:00.2000000" Value="0"/>
 			</DoubleAnimationUsingKeyFrames>
-			<DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="progressBorder" Storyboard.TargetProperty="(UIElement.Opacity)">
+            <ObjectAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="welcomeBorder" Storyboard.TargetProperty="(UIElement.Visibility)">
+                <DiscreteObjectKeyFrame KeyTime="00:00:00" Value="{x:Static Visibility.Visible}"/>
+                <DiscreteObjectKeyFrame KeyTime="00:00:00.2000000" Value="{x:Static Visibility.Collapsed}"/>
+            </ObjectAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="progressBorder" Storyboard.TargetProperty="(UIElement.Opacity)">
 				<SplineDoubleKeyFrame KeyTime="00:00:00" Value="1"/>
 				<SplineDoubleKeyFrame KeyTime="00:00:00.2000000" Value="0"/>
 				<SplineDoubleKeyFrame KeyTime="00:00:00.4000000" Value="1"/>
@@ -82,7 +86,7 @@
 				<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}" Padding="14,3,14,3" Margin="4,0,4,0" IsDefault="True" ToolTip="Starts the synchronization"/>
 			</UniformGrid>
 		</Border>
-		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8">
+		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8" VerticalAlignment="Center" HorizontalAlignment="Stretch">
 			<Border x:Name="progressBorder" BorderBrush="#FF010960" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" Padding="3,3,3,3" Visibility="Visible">
 				<Border.Background>
 					<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">

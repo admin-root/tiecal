@@ -286,7 +286,8 @@ namespace TieCal
                 progressInfoBox.InfoBoxType = InfoBoxType.Info;
                 progressInfoBox.Title = "Synchronization completed";
                 var sb = new StringBuilder();
-                sb.AppendFormat("A total of {0} (of {1} available modifications) was successfully merged with the Outlook calendar", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count); 
+                sb.AppendFormat("A total of {0} (of {1} available modifications) was successfully merged with the Outlook calendar.", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count);
+                sb.AppendLine();
                 if (_notesReader.NumberOfSkippedEntries > 0)
                     sb.AppendFormat("{0} calendar entries from Lotus Notes was skipped.", _notesReader.NumberOfSkippedEntries);
                 if (_outlookManager.NumberOfSkippedEntries > 0)
