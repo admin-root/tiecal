@@ -24,7 +24,6 @@ namespace TieCal
     {
         public ProgramSettings() 
         {
-            DryRun = true;
         }
         /// <summary>
         /// Gets the filename where settings are saved.
@@ -65,6 +64,5 @@ namespace TieCal
         }
         public string NotesDatabase { get; set; }
         public string NotesPassword { get; set; }
-        public bool DryRun { get; set; }
     }
 }
