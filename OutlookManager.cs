@@ -166,8 +166,8 @@ namespace TieCal
             foreach (var name in entry.Participants)
                 olItem.Recipients.Add(name);
             olItem.OptionalAttendees = String.Join(", ", entry.OptionalParticipants.ToArray());
-            olItem.Start = TimeZoneInfo.ConvertTimeFromUtc(entry.StartTime, TimeZoneInfo.Local);
-            olItem.End = TimeZoneInfo.ConvertTimeFromUtc(entry.EndTime, TimeZoneInfo.Local);
+            olItem.Start = entry.StartTimeLocal;
+            olItem.End = entry.EndTimeLocal;
             olItem.UnRead = false;
             olItem.ReminderOverrideDefault = true;
             olItem.ReminderSet = false;
