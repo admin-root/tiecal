@@ -6,66 +6,54 @@
     <Window.Resources>
         <local:EntryToDurationConverter x:Key="EntryToDurationConverter" />
         <local:ModificationTypeToImageConverter x:Key="ModificationTypeToImageConverter" />
-        
+
         <LinearGradientBrush x:Key="newEntryBrush" EndPoint="1,0.5" StartPoint="0,0.5">
-            <GradientStop Color="#FFDBFCB9" Offset="0"/>
+            <GradientStop Color="#FFE2F9C9" Offset="0"/>
             <GradientStop Color="#FFFFFFFF" Offset="1"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="modifiedEntryBrush" EndPoint="1,0.5" StartPoint="0,0.5">
-            <GradientStop Color="#FFECEC8B" Offset="0"/>
+            <GradientStop Color="#FFFFFED5" Offset="0"/>
             <GradientStop Color="#FFFFFFFF" Offset="1"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="oldEntryBrush" EndPoint="1,0.5" StartPoint="0,0.5">
-            <GradientStop Color="#FFECB7A0" Offset="0"/>
+            <GradientStop Color="#FFFFDCDC" Offset="0"/>
             <GradientStop Color="#FFFFFFFF" Offset="1"/>
         </LinearGradientBrush>
-        
+
         <DataTemplate x:Key="CalEntryItemTemplate">
-            <Border Padding="2" x:Name="bd" MinWidth="300">
-                <Grid>
-                	<Grid.ColumnDefinitions>
-                		<ColumnDefinition Width="Auto"/>
-                		<ColumnDefinition Width="*"/>
-                	</Grid.ColumnDefinitions>
-            		<CheckBox IsChecked="{Binding Path=ApplyModification, Mode=TwoWay}" Margin="4" ToolTip="Synchronize this entry" HorizontalAlignment="Center" VerticalAlignment="Center" Height="Auto" />
-            		<StackPanel Grid.Column="1" Margin="4,0,0,0">
-            			<TextBlock Text="{Binding Path=Entry.Subject}" Margin="-4,0,0,0" FontWeight="Bold" TextWrapping="Wrap" MinWidth="150" />
-            			<TextBlock Text="{Binding Path=Entry.Location, Mode=Default}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path=Entry.Location, Mode=Default}"/>
-            			<StackPanel Orientation="Horizontal">
-            				<TextBlock Text="Time: " Foreground="#FF606060" />
-            				<TextBlock Text="{Binding Path=Entry, Converter={StaticResource EntryToDurationConverter}}" />
-            			</StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Image Source="{Binding Path=Modification, Converter={StaticResource ModificationTypeToImageConverter}}" Width="24" Height="24" Margin="2" />
-                            <TextBlock Text="Modification Type: " Foreground="#FF606060" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding Path=Modification}" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <StackPanel x:Name="pnlChangedFields" Visibility="Collapsed">
-            				<TextBlock Width="50" Text="Changes:" Foreground="#FF606060" ToolTip="List of items in this entry that has changed since last sync"/>
-            				<ItemsControl ItemsSource="{Binding Path=ChangedFields}" Margin="4,0,0,0">
-            					<ItemsControl.ItemTemplate>
-            						<DataTemplate>
-            							<StackPanel Orientation="Horizontal">
-            								<TextBlock Text="- " />
-            								<TextBlock Text="{Binding}" />
-            							</StackPanel>
-            						</DataTemplate>
-            					</ItemsControl.ItemTemplate>
-            				</ItemsControl>
-            			</StackPanel>
-            		</StackPanel>          
-            	</Grid>
-            </Border>
+            <Grid Margin="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="{Binding Path=Entry.Subject}" FontWeight="Bold" TextWrapping="Wrap" MinWidth="150" />
+                <StackPanel Margin="4,0,0,0" Grid.Row="2">
+                    <StackPanel Orientation="Horizontal" TextBlock.Foreground="#FF606060" >
+                        <TextBlock Text="{Binding Path=Entry, Converter={StaticResource EntryToDurationConverter}}" />
+                        <TextBlock Text="@" />
+                        <TextBlock Text="{Binding Path=Entry.Location, Mode=Default}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path=Entry.Location, Mode=Default}" />
+                    </StackPanel>
+                    <StackPanel x:Name="pnlChangedFields" TextBlock.Foreground="#FF606060" Visibility="Collapsed" ToolTip="List of items in this entry that has changed since last sync">
+                        <TextBlock Text="Changes:" HorizontalAlignment="Left" />
+                        <ItemsControl ItemsSource="{Binding Path=ChangedFields}" Margin="8,0,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="• " />
+                                        <TextBlock Text="{Binding}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                    <CheckBox IsChecked="{Binding Path=ApplyModification, Mode=TwoWay}" Margin="0,2,0,2" ToolTip="Check this if you want to synchronize this calendar entry." Content="Synchronize Entry" HorizontalAlignment="Left"/>
+                </StackPanel>
+                <Image Source="{Binding Path=Modification, Converter={StaticResource ModificationTypeToImageConverter}}" Panel.ZIndex="-1" Margin="4" 
+                           Opacity="0.5" Grid.RowSpan="2" Width="32" Height="32" HorizontalAlignment="Right" VerticalAlignment="Top" />
+            </Grid>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding Path=Modification}" Value="Modified">
                     <Setter Property="Visibility" Value="Visible" TargetName="pnlChangedFields" />
-                    <Setter Property="Background" Value="{StaticResource modifiedEntryBrush}" TargetName="bd" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Modification}" Value="New">
-                    <Setter Property="Background" Value="{StaticResource newEntryBrush}" TargetName="bd" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Modification}" Value="Removed">
-                    <Setter Property="Background" Value="{StaticResource oldEntryBrush}" TargetName="bd" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -171,7 +159,7 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
-                                        <Border BorderThickness="2,1,0,1" BorderBrush="Transparent" x:Name="bd" Margin="4,0,0,0">
+                                        <Border BorderThickness="2,1,0,1" BorderBrush="Transparent" ToolTip="{Binding Path=Entry}" x:Name="bd" Margin="4,0,0,0">
                                             <ContentPresenter />
                                         </Border>
                                         <ControlTemplate.Triggers>
@@ -179,6 +167,15 @@
                                                 <Setter Property="BorderBrush" Value="#FF4040DD" TargetName="bd" />
                                                 <Setter Property="Foreground" Value="#FF101010" />
                                             </Trigger>
+                                            <DataTrigger Binding="{Binding Path=Modification}" Value="Modified">
+                                                <Setter Property="Background" Value="{StaticResource modifiedEntryBrush}" TargetName="bd" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Path=Modification}" Value="New">
+                                                <Setter Property="Background" Value="{StaticResource newEntryBrush}" TargetName="bd" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Path=Modification}" Value="Removed">
+                                                <Setter Property="Background" Value="{StaticResource oldEntryBrush}" TargetName="bd" />
+                                            </DataTrigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Setter.Value>
