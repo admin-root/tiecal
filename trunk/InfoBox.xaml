@@ -73,7 +73,7 @@
 			<TextBlock Text="{Binding Path=Title, ElementName=UserControl, Mode=Default}" Visibility="{Binding Path=Title, ElementName=UserControl, Converter={StaticResource NullToVisibilityConverter}}" x:Name="txtTitle" FontSize="14" FontWeight="Bold" Margin="4"/>
 			<TextBlock Text="{Binding Path=Message, ElementName=UserControl, Mode=Default}" x:Name="txtMessage" Margin="4,0,4,0" TextWrapping="Wrap"/>
 		</StackPanel>
-		<Button HorizontalAlignment="Right" Margin="0,0,4,5" VerticalAlignment="Bottom" Content="Ok" Grid.Column="1" x:Name="btnOk" FontSize="11" Padding="4,0,4,0" Click="btnOk_Click" Visibility="{Binding Path=ShowConfirmButton, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=UserControl, Mode=Default}"/>
+		<Button HorizontalAlignment="Right" Margin="0,0,4,5" VerticalAlignment="Bottom" Content="Ok" Grid.Column="1" x:Name="btnOk" FontSize="11" Padding="5,2,5,2" Click="btnOk_Click" Visibility="{Binding Path=ShowConfirmButton, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=UserControl, Mode=Default}"/>
 	</Grid>
 	
 </UserControl>

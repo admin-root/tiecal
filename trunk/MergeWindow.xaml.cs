@@ -19,6 +19,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Collections;
+using System.Globalization;
 
 namespace TieCal
 {
@@ -90,22 +91,49 @@ namespace TieCal
     internal class EntryToDurationConverter : IValueConverter
     {
         #region IValueConverter Members
+        private CultureInfo enUS;
+        public EntryToDurationConverter()
+        {
+            enUS = CultureInfo.CreateSpecificCulture("en-US");
+        }
+        private string PluralEnding(int number)
+        {
+            if (number == 1)
+                return "";
+            return "s";
+        }
 
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             CalendarEntry entry = (CalendarEntry) value;
             var duration = entry.EndTime - entry.StartTime;
+            var friendlyDateFormat = "ddd, MMM dd";
             if (entry.IsAllDay)
             {
-                return String.Format("{0:d} - {1:d} ({2} day(s))", entry.StartTime, entry.EndTime, Math.Round(duration.TotalDays, 0));
+                int days = (int) Math.Round(duration.TotalDays, 0);
+                if (days == 1)
+                    return String.Format("{0} (all day)", entry.StartTime.ToString(friendlyDateFormat, enUS));
+                else
+                    // Not sure if this can actually happen, I think they will be two separate entries...
+                    return String.Format("{0:d} — {1:d} ({2} day{3})", entry.StartTime, entry.EndTime, days, PluralEnding(days));
             }
             else if (entry.StartTime.Date == entry.EndTime.Date)
             {
-                return String.Format("{0:d} {1:t}-{2:t} ({3:0.#} hours)", entry.StartTime, entry.StartTime, entry.EndTime, duration.TotalHours);
+                return String.Format("{0} {1:t} ({2:0.#} hours)", entry.StartTime.ToString(friendlyDateFormat, enUS), entry.StartTime, duration.TotalHours);
             }
             else
             {
-                return String.Format("{0:g}-{1:g} ({2} days, {3:0.#} hours)", entry.StartTime, entry.EndTime, duration.Days, duration.TotalHours - (24 * duration.Days));
+                // Starts and ends on different days
+                StringBuilder sb = new StringBuilder(entry.StartTime.ToString(friendlyDateFormat, enUS));
+                sb.AppendFormat(" {0:t}", entry.StartTime);
+                sb.Append(" — ");
+                sb.AppendFormat("{0} {1:t}", entry.EndTime.ToString("MMM dd", enUS), entry.EndTime);
+                sb.Append(" (");
+                if (duration.Days > 0)
+                    sb.AppendFormat("{0} day{1},", duration.Days, PluralEnding(duration.Days));
+                sb.AppendFormat("{0:0.#} hours", duration.TotalHours - (24 * duration.Days));
+                sb.Append(")");
+                return sb.ToString();
             }
         }
 
