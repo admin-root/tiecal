@@ -96,6 +96,7 @@ namespace TieCal
         {
             enUS = CultureInfo.CreateSpecificCulture("en-US");
         }
+
         private string PluralEnding(int number)
         {
             if (number == 1)
@@ -108,26 +109,29 @@ namespace TieCal
             CalendarEntry entry = (CalendarEntry) value;
             var duration = entry.EndTime - entry.StartTime;
             var friendlyDateFormat = "ddd, MMM dd";
+            var start = entry.StartTimeLocal;
+            var end = entry.EndTimeLocal;
+
             if (entry.IsAllDay)
             {
                 int days = (int) Math.Round(duration.TotalDays, 0);
                 if (days == 1)
-                    return String.Format("{0} (all day)", entry.StartTime.ToString(friendlyDateFormat, enUS));
+                    return String.Format("{0} (all day)", start.ToString(friendlyDateFormat, enUS));
                 else
                     // Not sure if this can actually happen, I think they will be two separate entries...
-                    return String.Format("{0:d} — {1:d} ({2} day{3})", entry.StartTime, entry.EndTime, days, PluralEnding(days));
+                    return String.Format("{0:d} — {1:d} ({2} day{3})", start, end, days, PluralEnding(days));
             }
-            else if (entry.StartTime.Date == entry.EndTime.Date)
+            else if (start.Date == end.Date)
             {
-                return String.Format("{0} {1:t} ({2:0.#} hours)", entry.StartTime.ToString(friendlyDateFormat, enUS), entry.StartTime, duration.TotalHours);
+                return String.Format("{0} {1:t} ({2:0.#} hours)", start.ToString(friendlyDateFormat, enUS), start, duration.TotalHours);
             }
             else
             {
                 // Starts and ends on different days
-                StringBuilder sb = new StringBuilder(entry.StartTime.ToString(friendlyDateFormat, enUS));
-                sb.AppendFormat(" {0:t}", entry.StartTime);
+                StringBuilder sb = new StringBuilder(start.ToString(friendlyDateFormat, enUS));
+                sb.AppendFormat(" {0:t}", start);
                 sb.Append(" — ");
-                sb.AppendFormat("{0} {1:t}", entry.EndTime.ToString("MMM dd", enUS), entry.EndTime);
+                sb.AppendFormat("{0} {1:t}", end.ToString("MMM dd", enUS), end);
                 sb.Append(" (");
                 if (duration.Days > 0)
                     sb.AppendFormat("{0} day{1},", duration.Days, PluralEnding(duration.Days));

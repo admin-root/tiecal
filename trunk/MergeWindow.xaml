@@ -107,8 +107,8 @@
                 <StackPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Top">
                     <TextBlock Text="{Binding Path=Entry.Subject}" />
                     <TextBlock Text="{Binding Path=Entry.Location}" />
-                    <TextBlock Text="{Binding Path=Entry.StartTime, StringFormat=f}" />
-                    <TextBlock Text="{Binding Path=Entry.EndTime, StringFormat=f}" />
+                    <TextBlock Text="{Binding Path=Entry.StartTimeLocal, StringFormat=f}" />
+                    <TextBlock Text="{Binding Path=Entry.EndTimeLocal, StringFormat=f}" />
                 </StackPanel>
                 <StackPanel x:Name="pnlFullLines" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="1">
                 	<StackPanel Orientation="Horizontal" Margin="7,0,0,0" x:Name="pnlRepeatingEvent">

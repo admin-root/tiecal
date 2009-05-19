@@ -62,6 +62,7 @@ namespace TieCal
                 serializer.Serialize(writer, this);
             }
         }
+
         public string NotesDatabase { get; set; }
         public string NotesPassword { get; set; }
     }

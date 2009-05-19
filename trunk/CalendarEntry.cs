@@ -183,16 +183,36 @@ namespace TieCal
         public TimeZoneInfo EndTimeZone { get; set; }
         
         /// <summary>
-        /// Gets or sets the start time. This should always be in UTC time
+        /// Gets or sets the start time. This should always be in UTC time. Use the <see cref="StartTimeLocal"/> property if you want the time in the local timezone
         /// </summary>
         /// <value>The start time, in UTC.</value>
         public DateTime StartTime { get { return _startTime; } set { _startTime = value; } }
         /// <summary>
-        /// Gets or sets the end time. This should always be in UTC time
+        /// Gets or sets the end time. This should always be in UTC time. Use the <see cref="EndTimeLocal"/> property if you want the time in the local timezone
         /// </summary>
         /// <value>The end time, in UTC.</value>
         public DateTime EndTime { get { return _endTime; } set { _endTime = value; } }
 
+        /// <summary>
+        /// Gets the start time expressed in the current (local) timezone.
+        /// </summary>
+        public DateTime StartTimeLocal
+        {
+            get
+            {
+                return TimeZoneInfo.ConvertTimeFromUtc(StartTime, TimeZoneInfo.Local);
+            }
+        }
+        /// <summary>
+        /// Gets the end time expressed in the current (local) timezone.
+        /// </summary>
+        public DateTime EndTimeLocal
+        {
+            get
+            {
+                return TimeZoneInfo.ConvertTimeFromUtc(EndTime, TimeZoneInfo.Local);
+            }
+        }
         /// <summary>
         /// Gets a value indicating whether this calendar entry occurs in the specified interval.
         /// </summary>
