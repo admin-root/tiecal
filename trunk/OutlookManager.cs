@@ -22,8 +22,9 @@ namespace TieCal
     public class OutlookManager : ICalendarReader
     {
         Application outlookApp;
-        public OutlookManager()
+        public OutlookManager(ProgramSettings settings)
         {
+            ProgramSettings = settings;
             outlookApp = new ApplicationClass();
             CalendarAppVersion = outlookApp.Version;
             FetchCalendarWorker = new BackgroundWorker();
@@ -36,7 +37,7 @@ namespace TieCal
             MergeCalendarWorker.DoWork += new DoWorkEventHandler(MergeCalendarWorker_DoWork);
         }
 
-
+        private ProgramSettings ProgramSettings { get; set; }
         private MAPIFolder GetCalendarFolder()
         {
             NameSpace outlookNS = outlookApp.GetNamespace("MAPI");
@@ -148,6 +149,7 @@ namespace TieCal
             pattern.StartTime = occurences[0];
             pattern.EndTime = occurences[occurences.Count - 1];
         }
+        
         /// <summary>
         /// Updates the specified appointmentitem with data from the provided CalendarEntry.
         /// </summary>
@@ -161,16 +163,26 @@ namespace TieCal
             olItem.Body = entry.Body;
             olItem.Location = entry.Location;
             
-            foreach (Recipient rcp in olItem.Recipients)
-                rcp.Delete();
-            foreach (var name in entry.Participants)
-                olItem.Recipients.Add(name);
-            olItem.OptionalAttendees = String.Join(", ", entry.OptionalParticipants.ToArray());
+            //foreach (Recipient rcp in olItem.Recipients)
+            //    rcp.Delete();
+            //foreach (var name in entry.Participants)
+            //    olItem.Recipients.Add(name);
+            //olItem.OptionalAttendees = String.Join(", ", entry.OptionalParticipants.ToArray());
             olItem.Start = entry.StartTimeLocal;
             olItem.End = entry.EndTimeLocal;
             olItem.UnRead = false;
-            olItem.ReminderOverrideDefault = true;
-            olItem.ReminderSet = false;
+            if (entry.StartTimeLocal < DateTime.Now || entry.IsAllDay ||
+                ProgramSettings.ReminderMode == ReminderMode.NoReminder)
+            {
+                olItem.ReminderOverrideDefault = true;
+                olItem.ReminderSet = false;
+            }
+            else if (ProgramSettings.ReminderMode == ReminderMode.Custom)
+            {
+                olItem.ReminderOverrideDefault = true;
+                olItem.ReminderMinutesBeforeStart = ProgramSettings.ReminderMinutesBeforeStart;
+            }
+            
             olItem.AllDayEvent = entry.IsAllDay;
             UpdateRecurrencePattern(olItem, entry.Occurrences);
             if (!entry.IsRepeating)

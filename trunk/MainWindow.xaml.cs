@@ -20,6 +20,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Diagnostics;
 
 
 namespace TieCal
@@ -116,15 +117,35 @@ namespace TieCal
             InitializeComponent();
             progressBorder.Visibility = Visibility.Collapsed;
             settings = ProgramSettings.LoadSettings();
-            txtNotesPassword.Password = settings.NotesPassword;            
+            txtNotesPassword.Password = settings.NotesPassword;
+            txtMinutesBeforeStart.Text = settings.ReminderMinutesBeforeStart.ToString();
+            rdoDisableReminders.IsChecked = settings.ReminderMode == ReminderMode.NoReminder;
+            rdoUseOutlookDefaults.IsChecked = settings.ReminderMode == ReminderMode.OutlookDefault;
+            rdoUseCustomReminder.IsChecked = settings.ReminderMode == ReminderMode.Custom;
+            rdoUseCustomReminder.Checked += new RoutedEventHandler(rdoReminderMode_CheckedChanged);
+            rdoUseOutlookDefaults.Checked += new RoutedEventHandler(rdoReminderMode_CheckedChanged);
+            rdoDisableReminders.Checked += new RoutedEventHandler(rdoReminderMode_CheckedChanged);
+
             _notesReader = new NotesReader();
-            _outlookManager = new OutlookManager();
+            _outlookManager = new OutlookManager(settings);
             _calendarMerger = new CalendarMerger();
             wsReadNotes.SetupWorker(_notesReader.FetchCalendarWorker);
             wsReadOutlook.SetupWorker(_outlookManager.FetchCalendarWorker);
             wsMergeEntries.SetupWorker(_calendarMerger.Worker);
             wsApplyChanges.SetupWorker(_outlookManager.MergeCalendarWorker);
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
+        }
+
+        void rdoReminderMode_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender == rdoDisableReminders)
+                settings.ReminderMode = ReminderMode.NoReminder;
+            else if (sender == rdoUseOutlookDefaults)
+                settings.ReminderMode = ReminderMode.OutlookDefault;
+            else if (sender == rdoUseCustomReminder)
+                settings.ReminderMode = ReminderMode.Custom;
+            else
+                Debugger.Break();
         }
 
         void ResetWorkSteps()
@@ -311,6 +332,18 @@ namespace TieCal
         private void btnQuit_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void txtMinutesBeforeStart_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            int minutes;
+            if (Int32.TryParse(txtMinutesBeforeStart.Text, out minutes))
+            {
+                settings.ReminderMinutesBeforeStart = minutes;
+                txtMinutesBeforeStart.Background = Brushes.White;
+            }
+            else
+                txtMinutesBeforeStart.Background = Brushes.Red;
         }
     }
 
