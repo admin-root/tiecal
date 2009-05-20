@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     x:Class="TieCal.MainWindow"
     Title="TieCal Synchronizer" x:Name="window" 
-    xmlns:local="clr-namespace:TieCal" Width="800" Height="600" Icon="Images\tiecal.ico">
+    xmlns:local="clr-namespace:TieCal" Width="700" Height="560" Icon="Images\tiecal.ico">
 	<Window.Resources>
 		<local:BoolToOppositeBoolConverter x:Key="BoolToOppositeBoolConverter"/>
 		<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -72,12 +72,23 @@
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<TextBlock Margin="4" Text="Notes Password:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-				<StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,4,4,4">
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,4,4,4" VerticalAlignment="Center">
 					<PasswordBox x:Name="txtNotesPassword" PasswordChanged="txtNotesPassword_PasswordChanged" Width="120" ToolTip="Enter your Lotus Notes password here"/>
 					<Button Content="Refresh" x:Name="btnRefreshNotesDB" Margin="4,0,0,0" Click="btnRefreshNotesDB_Click" ToolTip="Click to refresh the list of available databases"/>
 				</StackPanel>
 				<TextBlock Margin="4" Grid.Row="1" Text="Notes DB:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
 				<ComboBox Margin="4" Grid.Column="1" Grid.Row="1" x:Name="cmbNotesDB" VerticalAlignment="Top" SelectionChanged="cmbNotesDB_SelectionChanged" ToolTip="Select the notes database containing your calendar. This is usually one named 'mail\yourname.nsf'"/>
+				<GroupBox Margin="4,4,4,4" Header="Reminders" Grid.Column="2" Grid.RowSpan="2">
+					<StackPanel Margin="0,2,0,2">
+						<RadioButton Margin="0,0,0,2" Content="Disable Reminders" IsChecked="True" ToolTip="Select this to completely disable reminders for synchronized events" x:Name="rdoDisableReminders" GroupName="ReminderMode"/>
+						<RadioButton Content="Use Outlook Default" ToolTip="Select this to use the settings that are in Outlook for reminders" x:Name="rdoUseOutlookDefaults" GroupName="ReminderMode"/>
+						<StackPanel Orientation="Horizontal">
+							<RadioButton Content="Use Custom Reminder:" VerticalAlignment="Center" ToolTip="Select this to specify the number of minutes before each event when a reminder should be used" x:Name="rdoUseCustomReminder" IsChecked="False" GroupName="ReminderMode"/>
+							<TextBox VerticalAlignment="Center" Width="30" Margin="12,0,0,0" x:Name="txtMinutesBeforeStart" IsEnabled="{Binding Path=IsChecked, ElementName=rdoUseCustomReminder, Mode=Default}" TextChanged="txtMinutesBeforeStart_TextChanged"/>
+							<TextBlock VerticalAlignment="Center" Text="minutes before meeting" TextWrapping="Wrap" Margin="2,0,0,0" />
+						</StackPanel>
+					</StackPanel>
+				</GroupBox>
 			</Grid>
 		</Expander>
 		<Border DockPanel.Dock="Bottom" x:Name="bdActionButtons" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" BorderBrush="#FF000000" BorderThickness="0,1,0,0">

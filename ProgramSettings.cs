@@ -24,6 +24,8 @@ namespace TieCal
     {
         public ProgramSettings() 
         {
+            ReminderMode = ReminderMode.NoReminder;
+            ReminderMinutesBeforeStart = 15;
         }
         /// <summary>
         /// Gets the filename where settings are saved.
@@ -65,5 +67,14 @@ namespace TieCal
 
         public string NotesDatabase { get; set; }
         public string NotesPassword { get; set; }
+        public ReminderMode ReminderMode { get; set; }
+        public int ReminderMinutesBeforeStart { get; set; }
+    }
+
+    public enum ReminderMode
+    {
+        NoReminder,
+        OutlookDefault,
+        Custom,
     }
 }
