@@ -1,0 +1,77 @@
+﻿<UserControl
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:TieCal"
+	mc:Ignorable="d"
+	x:Class="TieCal.WorkerStep"
+	x:Name="UserControl"
+	d:DesignWidth="200" d:DesignHeight="200" Width="150" Height="110">
+	<UserControl.Resources>
+        <local:WorkStepStageToEnabledConverter x:Key="WorkStepStageToEnabledConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <SolidColorBrush x:Key="doneBorderBrush" Color="#FF135C00" />
+		<SolidColorBrush x:Key="waitingBorderBrush" Color="#FF544B3B" />
+		<SolidColorBrush x:Key="workingBorderBrush" Color="#FFC27E05" />
+		<LinearGradientBrush x:Key="waitingBgBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+			<GradientStop Color="#FFDEDBD0" Offset="0"/>
+			<GradientStop Color="#FF565240" Offset="1"/>
+		</LinearGradientBrush>
+		<LinearGradientBrush x:Key="workingBgBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="#FFFFFFFF" Offset="0"/>
+            <GradientStop Color="#FFFBFFBD" Offset="1"/>
+        </LinearGradientBrush>
+		<LinearGradientBrush x:Key="doneBgBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+			<GradientStop Color="#FFDAFFDF" Offset="0"/>
+			<GradientStop Color="#FF81DA8B" Offset="1"/>
+		</LinearGradientBrush>
+	</UserControl.Resources>
+
+    <Border BorderThickness="1,1,1,1" x:Name="bd" CornerRadius="3,3,3,3" 
+            BorderBrush="{Binding Path=BorderBrush, ElementName=UserControl}" 
+            Background="{Binding Path=BorderBackground, ElementName=UserControl}">
+		<Grid x:Name="LayoutRoot">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+			<TextBlock Text="{Binding Path=Title, ElementName=UserControl, Mode=Default}" TextWrapping="Wrap" FontWeight="Bold" d:LayoutOverrides="Height" Margin="3,2,0,2"/>
+			<ProgressBar Grid.Row="1" VerticalAlignment="Center" Height="16" Margin="14,0,14,0" x:Name="pbar"/>
+            <Button Padding="4,0,4,0" Content="Abort" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Bottom" 
+                    Margin="4" Grid.Row="2" x:Name="btnAbort" Click="btnAbort_Click" 
+                    Visibility="{Binding Path=IsAbortable, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=UserControl}" 
+                    IsEnabled="{Binding Path=WorkStage, Converter={StaticResource WorkStepStageToEnabledConverter}, ElementName=UserControl}"/>
+            <Image HorizontalAlignment="Right" Margin="0,0,4,4" Width="48" Grid.Row="2" Source="{Binding Path=StatusImage, ElementName=UserControl}" x:Name="imgStatus" VerticalAlignment="Bottom"/>
+        </Grid>
+	</Border>
+    <UserControl.Style>
+        <Style TargetType="{x:Type local:WorkerStep}">
+            <Setter Property="StatusImage" Value="Images/Clock.png" />
+            <Setter Property="BorderBrush" Value="{StaticResource waitingBorderBrush}" />
+            <Setter Property="BorderBackground" Value="{StaticResource waitingBgBrush}" />
+            <Style.Triggers>
+                <Trigger Property="WorkStage" Value="Waiting">
+                    <Setter Property="Opacity" Value="0.5" />
+                </Trigger>
+                <Trigger Property="WorkStage" Value="Completed">
+                    <Setter Property="BorderBackground" Value="{StaticResource doneBgBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource doneBorderBrush}" />
+                    <Setter Property="StatusImage" Value="Images/Apply64.png" />
+                </Trigger>
+                <Trigger Property="WorkStage" Value="Working">
+                    <Setter Property="BorderBackground" Value="{StaticResource workingBgBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource workingBorderBrush}" />
+                    <Setter Property="StatusImage" Value="Images/exec-64.png" />
+                </Trigger>
+                <Trigger Property="WorkStage" Value="Cancelled">
+                    <Setter Property="StatusImage" Value="Images/Fail64.png" />
+                </Trigger>
+                <Trigger Property="WorkStage" Value="Failed">
+                    <Setter Property="StatusImage" Value="Images/Fail64.png" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Style>
+</UserControl>
