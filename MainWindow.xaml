@@ -57,7 +57,7 @@
 		</EventTrigger>
 	</Window.Triggers>
 	<DockPanel Margin="0,0,0,0">
-		<Expander x:Name="expSettings" DockPanel.Dock="Top" IsEnabled="{Binding Path=IsWorking, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" BorderBrush="#FF000742" Background="#FFFFFFFF" Margin="8,8,8,0">
+		<Expander x:Name="expSettings" DockPanel.Dock="Top" IsEnabled="{Binding Path=IsSynchronizing, Converter={StaticResource BoolToOppositeBoolConverter}, ElementName=window, Mode=Default}" BorderBrush="#FF000742" Background="#FFFFFFFF" Margin="8,8,8,0">
 			<Expander.Header>
 				<TextBlock Text="Settings" FontWeight="Bold" />
 			</Expander.Header>
@@ -97,7 +97,7 @@
 				<Button Content="Synchronize" x:Name="btnSync" Click="btnSync_Click" IsEnabled="{Binding Path=IsReadyToSynchronize, ElementName=window, Mode=Default}" Padding="14,3,14,3" Margin="4,0,4,0" IsDefault="True" ToolTip="Starts the synchronization"/>
 			</UniformGrid>
 		</Border>
-		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+		<StackPanel DockPanel.Dock="Top" Margin="8,8,8,8" VerticalAlignment="Top" HorizontalAlignment="Stretch">
 			<Border x:Name="progressBorder" BorderBrush="#FF010960" BorderThickness="1,1,1,1" CornerRadius="3,3,3,3" Padding="3,3,3,3" Visibility="Visible">
 				<Border.Background>
 					<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
