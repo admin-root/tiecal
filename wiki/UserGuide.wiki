@@ -1,0 +1,15 @@
+#summary Documentation for people using TieCal
+#labels Phase-Support
+
+= Introduction =
+This programs lets you synchronize the calendar in Lotus Notes with Microsoft Outlook. The synchronization goes one way, from lotus to outlook.
+
+Once the calendar is synchronized with Outlook it can be further synchronized with other calendars and mobile phones. 
+
+= Configuration =
+
+TODO
+
+= Troubleshooting =
+
+TODO
