@@ -195,15 +195,18 @@ namespace TieCal
 
         private void RefreshNotesDatabases()
         {
+            cmbNotesDB.Items.Clear();
             cmbNotesDB.ItemsSource = _notesReader.GetAvailableDatabases();
             if (ProgramSettings.Instance.NotesDatabase != null)
                 cmbNotesDB.SelectedItem = ProgramSettings.Instance.NotesDatabase;
             else
             {
+                // Make a default selection. The one with the calendar is most often the one named: mail\<username>.nsf
                 foreach (var item in cmbNotesDB.Items)
                 {
-                    if (item.ToString().StartsWith("mail\\") && item.ToString().EndsWith(".nsf"))
+                    if (item.ToString().StartsWith(@"mail\") && item.ToString().EndsWith(".nsf"))
                     {
+                        
                         cmbNotesDB.SelectedItem = item;
                         break;
                     }
@@ -213,6 +216,7 @@ namespace TieCal
         private bool AskForPassword()
         {
             PasswordDialog dlg = new PasswordDialog();
+            dlg.Owner = this;
             dlg.RememberPassword = ProgramSettings.Instance.RememberPassword;
             var response = dlg.ShowDialog();
             if (response == false)
@@ -304,7 +308,7 @@ namespace TieCal
             {
                 if (_calendarMerger.ModifiedEntries.Count == 0)
                 {
-                    MessageBox.Show("Your calendars are already fully synchronized!");
+                    MessageBox.Show(this, "Your calendars are already fully synchronized!");
                     // Call the final workstage anyway to limit the amount of extra code paths (the workstage will complete instantly anyway)
                     wsApplyChanges.StartWork(_calendarMerger.ModifiedEntries);
                     return;
