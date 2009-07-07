@@ -110,24 +110,28 @@ namespace TieCal
         private NotesReader _notesReader;
         private OutlookManager _outlookManager;
         private CalendarMerger _calendarMerger;
-        private ProgramSettings settings;
         
         public MainWindow()
         {
             InitializeComponent();
             progressBorder.Visibility = Visibility.Collapsed;
-            settings = ProgramSettings.LoadSettings();
-            txtNotesPassword.Password = settings.NotesPassword;
-            txtMinutesBeforeStart.Text = settings.ReminderMinutesBeforeStart.ToString();
-            rdoDisableReminders.IsChecked = settings.ReminderMode == ReminderMode.NoReminder;
-            rdoUseOutlookDefaults.IsChecked = settings.ReminderMode == ReminderMode.OutlookDefault;
-            rdoUseCustomReminder.IsChecked = settings.ReminderMode == ReminderMode.Custom;
+            txtMinutesBeforeStart.Text = ProgramSettings.Instance.ReminderMinutesBeforeStart.ToString();
+            
+            if (String.IsNullOrEmpty(ProgramSettings.Instance.NotesPassword) && !String.IsNullOrEmpty(ProgramSettings.Instance.NotesDatabase))
+            {
+                // If the password isn't stored, we won't be able to put all the real notes DBs in the combo. At least put the selected db in there.
+                cmbNotesDB.Items.Add(ProgramSettings.Instance.NotesDatabase);
+                cmbNotesDB.SelectedItem = ProgramSettings.Instance.NotesDatabase;
+            }
+            rdoDisableReminders.IsChecked = ProgramSettings.Instance.ReminderMode == ReminderMode.NoReminder;
+            rdoUseOutlookDefaults.IsChecked = ProgramSettings.Instance.ReminderMode == ReminderMode.OutlookDefault;
+            rdoUseCustomReminder.IsChecked = ProgramSettings.Instance.ReminderMode == ReminderMode.Custom;
             rdoUseCustomReminder.Checked += new RoutedEventHandler(rdoReminderMode_CheckedChanged);
             rdoUseOutlookDefaults.Checked += new RoutedEventHandler(rdoReminderMode_CheckedChanged);
             rdoDisableReminders.Checked += new RoutedEventHandler(rdoReminderMode_CheckedChanged);
 
             _notesReader = new NotesReader();
-            _outlookManager = new OutlookManager(settings);
+            _outlookManager = new OutlookManager();
             _calendarMerger = new CalendarMerger();
             wsReadNotes.SetupWorker(_notesReader.FetchCalendarWorker);
             wsReadOutlook.SetupWorker(_outlookManager.FetchCalendarWorker);
@@ -139,11 +143,11 @@ namespace TieCal
         void rdoReminderMode_CheckedChanged(object sender, RoutedEventArgs e)
         {
             if (sender == rdoDisableReminders)
-                settings.ReminderMode = ReminderMode.NoReminder;
+                ProgramSettings.Instance.ReminderMode = ReminderMode.NoReminder;
             else if (sender == rdoUseOutlookDefaults)
-                settings.ReminderMode = ReminderMode.OutlookDefault;
+                ProgramSettings.Instance.ReminderMode = ReminderMode.OutlookDefault;
             else if (sender == rdoUseCustomReminder)
-                settings.ReminderMode = ReminderMode.Custom;
+                ProgramSettings.Instance.ReminderMode = ReminderMode.Custom;
             else
                 Debugger.Break();
         }
@@ -158,24 +162,24 @@ namespace TieCal
 
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            if (settings.NotesPassword != null && settings.NotesPassword.Length > 0)
+            if (!String.IsNullOrEmpty(ProgramSettings.Instance.NotesPassword))
                 RefreshNotesDatabases();
-            else
+            else if (String.IsNullOrEmpty(ProgramSettings.Instance.NotesDatabase))
+                // User must do setup before syncing
                 expSettings.IsExpanded = true;
             UpdateIsReadyState();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            settings.NotesDatabase = (string)cmbNotesDB.SelectedItem;
-            settings.NotesPassword = txtNotesPassword.Password;
-            settings.Save();
+            ProgramSettings.Instance.NotesDatabase = (string)cmbNotesDB.SelectedItem;
+            ProgramSettings.Instance.Save();
             base.OnClosing(e);
         }
 
         private void UpdateIsReadyState()
         {
-            if (String.IsNullOrEmpty(settings.NotesDatabase) || String.IsNullOrEmpty(settings.NotesPassword))
+            if (String.IsNullOrEmpty(ProgramSettings.Instance.NotesDatabase))
                 IsReadyToSynchronize = false;
             else
                 IsReadyToSynchronize = true;
@@ -191,16 +195,41 @@ namespace TieCal
 
         private void RefreshNotesDatabases()
         {
-            _notesReader.Password = settings.NotesPassword;
             cmbNotesDB.ItemsSource = _notesReader.GetAvailableDatabases();
-            if (settings.NotesDatabase != null)
-                cmbNotesDB.SelectedItem = settings.NotesDatabase;
+            if (ProgramSettings.Instance.NotesDatabase != null)
+                cmbNotesDB.SelectedItem = ProgramSettings.Instance.NotesDatabase;
+            else
+            {
+                foreach (var item in cmbNotesDB.Items)
+                {
+                    if (item.ToString().StartsWith("mail\\") && item.ToString().EndsWith(".nsf"))
+                    {
+                        cmbNotesDB.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
         }
+        private bool AskForPassword()
+        {
+            PasswordDialog dlg = new PasswordDialog();
+            dlg.RememberPassword = ProgramSettings.Instance.RememberPassword;
+            var response = dlg.ShowDialog();
+            if (response == false)
+                return false;
+            ProgramSettings.Instance.NotesPassword = dlg.Password;
+            ProgramSettings.Instance.RememberPassword = dlg.RememberPassword;
+            return true;
+        }
+
         private void btnSync_Click(object sender, RoutedEventArgs e)
         {
-            _notesReader.Password = settings.NotesPassword;
-            _notesReader.DatabaseFile = settings.NotesDatabase;
-            BeginFetchCalendarEntries();
+            if (String.IsNullOrEmpty(ProgramSettings.Instance.NotesPassword))
+            {
+                if (!AskForPassword())
+                    return;
+            }            
+            BeginFetchCalendarEntries();            
         }
 
         private void btnCancelSync_Click(object sender, RoutedEventArgs e)
@@ -210,21 +239,20 @@ namespace TieCal
             if (_outlookManager.FetchCalendarWorker.IsBusy)
                 _outlookManager.FetchCalendarWorker.CancelAsync();
         }
-
-        private void txtNotesPassword_PasswordChanged(object sender, RoutedEventArgs e)
+        
+        private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            settings.NotesPassword = txtNotesPassword.Password;
-            UpdateIsReadyState();
-        }
-
-        private void btnRefreshNotesDB_Click(object sender, RoutedEventArgs e)
-        {
+            if (String.IsNullOrEmpty(ProgramSettings.Instance.NotesPassword))
+            {
+                if (!AskForPassword())
+                    return;
+            }
             RefreshNotesDatabases();
         }
-
+        
         private void cmbNotesDB_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            settings.NotesDatabase = (string) cmbNotesDB.SelectedItem;
+            ProgramSettings.Instance.NotesDatabase = (string) cmbNotesDB.SelectedItem;
             UpdateIsReadyState();
         }
         private void DisplaySynchronizationStatus(string title, string message, InfoBoxType type)
@@ -339,7 +367,7 @@ namespace TieCal
             int minutes;
             if (Int32.TryParse(txtMinutesBeforeStart.Text, out minutes))
             {
-                settings.ReminderMinutesBeforeStart = minutes;
+                ProgramSettings.Instance.ReminderMinutesBeforeStart = minutes;
                 txtMinutesBeforeStart.Background = Brushes.White;
             }
             else

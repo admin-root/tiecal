@@ -20,12 +20,18 @@ namespace TieCal
     /// Holds settings for TieCal
     /// </summary>
     [Serializable]
-    public class ProgramSettings
+    public sealed class ProgramSettings
     {
         public ProgramSettings() 
         {
             ReminderMode = ReminderMode.NoReminder;
             ReminderMinutesBeforeStart = 15;
+        }
+
+        private static ProgramSettings _instance = ProgramSettings.LoadSettings();
+        public static ProgramSettings Instance
+        {
+            get { return _instance; }
         }
         /// <summary>
         /// Gets the filename where settings are saved.
@@ -44,13 +50,15 @@ namespace TieCal
         {
             try
             {
+                if (!File.Exists(SaveFilename))
+                    return new ProgramSettings();
                 using (TextReader writer = new StreamReader(SaveFilename))
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(ProgramSettings));
                     return (ProgramSettings)serializer.Deserialize(writer);
                 }
             }
-            catch (FileNotFoundException)
+            catch (IOException)
             {
                 return new ProgramSettings();
             }
@@ -58,6 +66,8 @@ namespace TieCal
 
         public void Save()
         {
+            if (!RememberPassword)
+                NotesPassword = null;
             using (TextWriter writer = new StreamWriter(SaveFilename))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(ProgramSettings));
@@ -67,6 +77,7 @@ namespace TieCal
 
         public string NotesDatabase { get; set; }
         public string NotesPassword { get; set; }
+        public bool RememberPassword { get; set; }
         public ReminderMode ReminderMode { get; set; }
         public int ReminderMinutesBeforeStart { get; set; }
     }

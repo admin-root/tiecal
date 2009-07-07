@@ -62,12 +62,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="PasswordDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="WorkerStep.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
     <Compile Include="InfoBox.xaml.cs">
       <DependentUpon>InfoBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PasswordDialog.xaml.cs">
+      <DependentUpon>PasswordDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkerStep.xaml.cs">
       <DependentUpon>WorkerStep.xaml</DependentUpon>
@@ -195,6 +202,9 @@
     <Resource Include="Images\Add-64.png" />
     <Resource Include="Images\Edit-64.png" />
     <Resource Include="Images\trash-64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\encrypted-64.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -62,23 +62,20 @@
 				<TextBlock Text="Settings" FontWeight="Bold" />
 			</Expander.Header>
 			<Grid Margin="8,0,8,8">
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="Auto"/>
 					<ColumnDefinition Width="Auto"/>
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
-				<TextBlock Margin="4" Text="Notes Password:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-				<StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,4,4,4" VerticalAlignment="Center">
-					<PasswordBox x:Name="txtNotesPassword" PasswordChanged="txtNotesPassword_PasswordChanged" Width="120" ToolTip="Enter your Lotus Notes password here"/>
-					<Button Content="Refresh" x:Name="btnRefreshNotesDB" Margin="4,0,0,0" Click="btnRefreshNotesDB_Click" ToolTip="Click to refresh the list of available databases"/>
+				<GroupBox Margin="4,4,4,4" Header="Lotus Notes" Grid.Column="0" VerticalAlignment="Stretch">
+				<StackPanel Orientation="Vertical" Margin="4,0,4,0" VerticalAlignment="Stretch">
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Text="Database File:" d:LayoutOverrides="Height" ToolTip="Select the lotus notes database file that contains the calendar you wish to synchronize." VerticalAlignment="Center" Margin="0,0,8,0"/>
+						<ComboBox x:Name="cmbNotesDB" SelectionChanged="cmbNotesDB_SelectionChanged" ToolTip="Select the notes database containing your calendar. This is usually one named 'mail\yourname.nsf'" d:LayoutOverrides="Height" MinWidth="100"/>
+					</StackPanel>
+					<Button Content="Refresh" HorizontalAlignment="Right" x:Name="btnRefresh" Click="btnRefresh_Click" Margin="4,4,4,4"/>
 				</StackPanel>
-				<TextBlock Margin="4" Grid.Row="1" Text="Notes DB:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-				<ComboBox Margin="4" Grid.Column="1" Grid.Row="1" x:Name="cmbNotesDB" VerticalAlignment="Top" SelectionChanged="cmbNotesDB_SelectionChanged" ToolTip="Select the notes database containing your calendar. This is usually one named 'mail\yourname.nsf'"/>
-				<GroupBox Margin="4,4,4,4" Header="Reminders" Grid.Column="2" Grid.RowSpan="2">
+				</GroupBox>
+				<GroupBox Margin="4,4,4,4" Header="Reminders" Grid.Column="1" VerticalAlignment="Stretch">
 					<StackPanel Margin="0,2,0,2">
 						<RadioButton Margin="0,0,0,2" Content="Disable Reminders" IsChecked="True" ToolTip="Select this to completely disable reminders for synchronized events" x:Name="rdoDisableReminders" GroupName="ReminderMode"/>
 						<RadioButton Content="Use Outlook Default" ToolTip="Select this to use the settings that are in Outlook for reminders" x:Name="rdoUseOutlookDefaults" GroupName="ReminderMode"/>
