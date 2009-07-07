@@ -270,8 +270,7 @@ namespace TieCal
                 foreach (AppointmentItem item in calendarFolder.Items)
                 {
                     var calEntry = CreateCalendarEntry(item);
-                    if (calEntry.OutlookID != null)
-                        // TODO: report error when that mechanism exists
+                    if (calEntry.OutlookID != null && !(calEntry.Categories != null && calEntry.Categories.Contains("nosync")))
                         calEntries.Add(calEntry);
                     else
                         NumberOfSkippedEntries++;
