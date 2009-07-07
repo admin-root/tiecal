@@ -67,18 +67,18 @@
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<GroupBox Margin="4,4,4,4" Header="Lotus Notes" Grid.Column="0" VerticalAlignment="Stretch">
-				<StackPanel Orientation="Vertical" Margin="4,0,4,0" VerticalAlignment="Stretch">
+				<StackPanel Orientation="Vertical" Margin="4,4,4,4" VerticalAlignment="Stretch">
 					<StackPanel Orientation="Horizontal">
 						<TextBlock Text="Database File:" d:LayoutOverrides="Height" ToolTip="Select the lotus notes database file that contains the calendar you wish to synchronize." VerticalAlignment="Center" Margin="0,0,8,0"/>
 						<ComboBox x:Name="cmbNotesDB" SelectionChanged="cmbNotesDB_SelectionChanged" ToolTip="Select the notes database containing your calendar. This is usually one named 'mail\yourname.nsf'" d:LayoutOverrides="Height" MinWidth="100"/>
 					</StackPanel>
-					<Button Content="Refresh" HorizontalAlignment="Right" x:Name="btnRefresh" Click="btnRefresh_Click" Margin="4,4,4,4"/>
+					<Button Content="Refresh" HorizontalAlignment="Right" x:Name="btnRefresh" Click="btnRefresh_Click" Margin="4,8,4,4" Padding="3,0,3,0" ToolTip="Retrieve a list of Lotus Notes databases"/>
 				</StackPanel>
 				</GroupBox>
 				<GroupBox Margin="4,4,4,4" Header="Reminders" Grid.Column="1" VerticalAlignment="Stretch">
-					<StackPanel Margin="0,2,0,2">
+					<StackPanel Margin="4,4,4,4">
 						<RadioButton Margin="0,0,0,2" Content="Disable Reminders" IsChecked="True" ToolTip="Select this to completely disable reminders for synchronized events" x:Name="rdoDisableReminders" GroupName="ReminderMode"/>
-						<RadioButton Content="Use Outlook Default" ToolTip="Select this to use the settings that are in Outlook for reminders" x:Name="rdoUseOutlookDefaults" GroupName="ReminderMode"/>
+						<RadioButton Content="Use Outlook Default" ToolTip="Select this to use the settings that are in Outlook for reminders" x:Name="rdoUseOutlookDefaults" GroupName="ReminderMode" Margin="0,0,0,2"/>
 						<StackPanel Orientation="Horizontal">
 							<RadioButton Content="Use Custom Reminder:" VerticalAlignment="Center" ToolTip="Select this to specify the number of minutes before each event when a reminder should be used" x:Name="rdoUseCustomReminder" IsChecked="False" GroupName="ReminderMode"/>
 							<TextBox VerticalAlignment="Center" Width="30" Margin="12,0,0,0" x:Name="txtMinutesBeforeStart" IsEnabled="{Binding Path=IsChecked, ElementName=rdoUseCustomReminder, Mode=Default}" TextChanged="txtMinutesBeforeStart_TextChanged"/>
