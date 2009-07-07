@@ -27,20 +27,11 @@ namespace TieCal
             FetchCalendarWorker.WorkerSupportsCancellation = true;
             FetchCalendarWorker.DoWork += new DoWorkEventHandler(worker_DoWork);
         }
-
-        /// <summary>
-        /// Gets or sets the database file to read calendar entries from.
-        /// </summary>
-        public string DatabaseFile { get; set; }
-        /// <summary>
-        /// Gets or sets the password required to access the <see cref="DatabaseFile"/>.
-        /// </summary>
-        public string Password { get; set; }
         
         private ISession CreateNotesSession()
         {
             var session = new NotesSessionClass();
-            session.Initialize(Password);
+            session.Initialize(ProgramSettings.Instance.NotesPassword);
             CalendarAppVersion = session.NotesVersion;
             return session;
         }
@@ -48,7 +39,7 @@ namespace TieCal
         public List<string> GetAvailableDatabases()
         {
             List<String> databases = new List<string>();
-            var session = CreateNotesSession();
+            var session = CreateNotesSession();            
             var dir = session.GetDbDirectory("");
             var db = dir.GetFirstDatabase(DB_TYPES.DATABASE);
             while (db != null)
@@ -56,6 +47,7 @@ namespace TieCal
                 databases.Add(db.FilePath);
                 db = dir.GetNextDatabase();
             }
+            
             return databases;
         }
 
@@ -212,6 +204,13 @@ namespace TieCal
         }
 
         /// <summary>
+        /// Gets a value indicating whether this notes reader has access to notes.
+        /// </summary>
+        public bool HasAccessToNotes
+        {
+            get { return !String.IsNullOrEmpty(ProgramSettings.Instance.NotesPassword); }
+        }
+        /// <summary>
         /// Converts a list of people in a notes string format to an enumerable list of display friendly names.
         /// </summary>
         /// <param name="notesArray">The notes array, with each item separated by semicolon.</param>
@@ -309,7 +308,7 @@ namespace TieCal
             try
             {
                 var session = CreateNotesSession();
-                var db = session.GetDatabase("", DatabaseFile, false);
+                var db = session.GetDatabase("", ProgramSettings.Instance.NotesDatabase, false);
                 
                 NotesView view = db.GetView("Calendar");
                 

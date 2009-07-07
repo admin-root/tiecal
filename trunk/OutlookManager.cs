@@ -22,9 +22,8 @@ namespace TieCal
     public class OutlookManager : ICalendarReader
     {
         Application outlookApp;
-        public OutlookManager(ProgramSettings settings)
+        public OutlookManager()
         {
-            ProgramSettings = settings;
             outlookApp = new ApplicationClass();
             CalendarAppVersion = outlookApp.Version;
             FetchCalendarWorker = new BackgroundWorker();
@@ -37,7 +36,6 @@ namespace TieCal
             MergeCalendarWorker.DoWork += new DoWorkEventHandler(MergeCalendarWorker_DoWork);
         }
 
-        private ProgramSettings ProgramSettings { get; set; }
         private MAPIFolder GetCalendarFolder()
         {
             NameSpace outlookNS = outlookApp.GetNamespace("MAPI");
@@ -172,15 +170,15 @@ namespace TieCal
             olItem.End = entry.EndTimeLocal;
             olItem.UnRead = false;
             if (entry.StartTimeLocal < DateTime.Now || entry.IsAllDay ||
-                ProgramSettings.ReminderMode == ReminderMode.NoReminder)
+                ProgramSettings.Instance.ReminderMode == ReminderMode.NoReminder)
             {
                 olItem.ReminderOverrideDefault = true;
                 olItem.ReminderSet = false;
             }
-            else if (ProgramSettings.ReminderMode == ReminderMode.Custom)
+            else if (ProgramSettings.Instance.ReminderMode == ReminderMode.Custom)
             {
                 olItem.ReminderOverrideDefault = true;
-                olItem.ReminderMinutesBeforeStart = ProgramSettings.ReminderMinutesBeforeStart;
+                olItem.ReminderMinutesBeforeStart = ProgramSettings.Instance.ReminderMinutesBeforeStart;
             }
             
             olItem.AllDayEvent = entry.IsAllDay;
