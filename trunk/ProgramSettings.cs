@@ -13,6 +13,9 @@ using System.Text;
 using System.Xml.Serialization;
 using System.IO;
 using System.Security;
+using System.Windows.Data;
+using System.Windows;
+using System.ComponentModel;
 
 namespace TieCal
 {
@@ -20,7 +23,7 @@ namespace TieCal
     /// Holds settings for TieCal
     /// </summary>
     [Serializable]
-    public sealed class ProgramSettings
+    public sealed class ProgramSettings : INotifyPropertyChanged
     {
         public ProgramSettings() 
         {
@@ -80,13 +83,19 @@ namespace TieCal
                 serializer.Serialize(writer, this);
             }
         }
-
-        public string NotesDatabase { get; set; }
+        private string _notesDb;
+        public string NotesDatabase { get { return _notesDb; } set { _notesDb = value; RaisePropertyChanged("NotesDatabase"); } }
         public string NotesPassword { get; set; }
         public bool RememberPassword { get; set; }
         public bool ConfirmMerge { get; set; }
-        public ReminderMode ReminderMode { get; set; }
-        public int ReminderMinutesBeforeStart { get; set; }
+        private ReminderMode _reminderMode;
+        /// <summary>
+        /// Gets or sets a value that specifies how reminders should be used for synchronized entries.
+        /// </summary>
+        public ReminderMode ReminderMode { get { return _reminderMode; } set { _reminderMode = value; RaisePropertyChanged("ReminderMode"); RaisePropertyChanged("ReminderSettingAsString"); } }
+        private int _reminderMinutes;
+        public int ReminderMinutesBeforeStart { get { return _reminderMinutes; } set { _reminderMinutes = value; RaisePropertyChanged("ReminderMinutesBeforeStart"); RaisePropertyChanged("ReminderSettingAsString"); } }
+
 
         public string ReminderSettingAsString
         {
@@ -105,6 +114,17 @@ namespace TieCal
                 }
             }
         }
+
+        #region INotifyPropertyChanged Members
+
+        private void RaisePropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
     }
 
     public enum ReminderMode
@@ -113,4 +133,28 @@ namespace TieCal
         OutlookDefault,
         Custom,
     }
+
+    /// <summary>
+    /// Converter that allows an element to be visible if the string value it is bound to is either <c>null</c> or empty (zero length or only whitespaces). 
+    /// Useful to display warning icon for invalid strings
+    /// </summary>
+    public class StringEmptyToVisibilityConverter : IValueConverter
+    {
+        #region IValueConverter Members
+
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value == null || value.ToString().Trim().Length == 0)
+                return Visibility.Visible;
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
 }

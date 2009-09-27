@@ -66,6 +66,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="SelectNotesDbDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SetupRemindersDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="WorkerStep.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -75,6 +83,12 @@
     </Compile>
     <Compile Include="PasswordDialog.xaml.cs">
       <DependentUpon>PasswordDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SelectNotesDbDialog.xaml.cs">
+      <DependentUpon>SelectNotesDbDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SetupRemindersDialog.xaml.cs">
+      <DependentUpon>SetupRemindersDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkerStep.xaml.cs">
       <DependentUpon>WorkerStep.xaml</DependentUpon>
@@ -98,12 +112,12 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
+      <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
+      <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -127,8 +141,8 @@
     </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="TesterWindow.xaml.cs">
       <DependentUpon>TesterWindow.xaml</DependentUpon>
@@ -205,6 +219,15 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\encrypted-64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\warning-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\notes-64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\alarm-64.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

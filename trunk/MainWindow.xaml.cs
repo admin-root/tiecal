@@ -166,27 +166,6 @@ namespace TieCal
             wsReadOutlook.StartWork();
         }
 
-        //private void RefreshNotesDatabases()
-        //{
-        //    cmbNotesDB.Items.Clear();
-        //    cmbNotesDB.ItemsSource = _notesReader.GetAvailableDatabases();
-        //    if (ProgramSettings.Instance.NotesDatabase != null)
-        //        cmbNotesDB.SelectedItem = ProgramSettings.Instance.NotesDatabase;
-        //    else
-        //    {
-        //        // Make a default selection. The one with the calendar is most often the one named: mail\<username>.nsf
-        //        foreach (var item in cmbNotesDB.Items)
-        //        {
-        //            if (item.ToString().StartsWith(@"mail\") && item.ToString().EndsWith(".nsf"))
-        //            {
-                        
-        //                cmbNotesDB.SelectedItem = item;
-        //                break;
-        //            }
-        //        }
-        //    }
-        //}
-
         private bool AskForPassword()
         {
             PasswordDialog dlg = new PasswordDialog();
@@ -334,6 +313,26 @@ namespace TieCal
         private void btnQuit_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void lnkChangeDb_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new SelectNotesDbDialog(_notesReader);
+            if (dlg.ShowDialog() == true)
+            {
+                ProgramSettings.Instance.NotesDatabase = dlg.NotesDatabase;
+            }
+        }
+
+        private void lnkChangeReminderSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new SetupRemindersDialog();
+            if (dlg.ShowDialog() == true)
+            {
+                ProgramSettings.Instance.ReminderMode = dlg.ReminderMode;
+                if (ProgramSettings.Instance.ReminderMode == ReminderMode.Custom)
+                    ProgramSettings.Instance.ReminderMinutesBeforeStart = dlg.ReminderMinutes;
+            }
         }
 
     }
