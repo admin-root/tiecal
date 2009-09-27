@@ -12,6 +12,7 @@ namespace TieCal
 {
 	public partial class SelectNotesDbDialog
 	{
+        private NotesReader _notesReader;
 		public SelectNotesDbDialog()
 		{
 			this.InitializeComponent();
@@ -19,13 +20,19 @@ namespace TieCal
 
         public SelectNotesDbDialog(NotesReader notesReader) : this()
         {
-            RefreshNotesDatabases(notesReader);
+            _notesReader = notesReader;
+            this.Loaded += delegate { RefreshNotesDatabases(); };
         }
 
-        private void RefreshNotesDatabases(NotesReader notesReader)
+        private void RefreshNotesDatabases()
         {
-            cmbNotesDB.Items.Clear();
-            cmbNotesDB.ItemsSource = notesReader.GetAvailableDatabases();
+            if (!_notesReader.HasAccessToNotes)
+            {
+                // No password known, ask the user
+                if (!MainWindow.AskForPassword())
+                    return;
+            }
+            cmbNotesDB.ItemsSource = _notesReader.GetAvailableDatabases();
             if (ProgramSettings.Instance.NotesDatabase != null)
                 cmbNotesDB.SelectedItem = ProgramSettings.Instance.NotesDatabase;
             else
@@ -60,6 +67,11 @@ namespace TieCal
         {
             DialogResult = false;
             //Close();
+        }
+
+        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshNotesDatabases();
         }
 	}
 }

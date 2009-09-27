@@ -48,6 +48,14 @@
 				<SplineDoubleKeyFrame KeyTime="00:00:00.4000000" Value="1"/>
 			</DoubleAnimationUsingKeyFrames>
 		</Storyboard>
+		<LinearGradientBrush x:Key="OkBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+			<GradientStop Color="#FFDAFFDF" Offset="0"/>
+			<GradientStop Color="#FF81DA8B" Offset="1"/>
+		</LinearGradientBrush>
+		<LinearGradientBrush x:Key="WarningBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+			<GradientStop Color="#FFFBFFDA" Offset="0"/>
+			<GradientStop Color="#FFCDDA81" Offset="1"/>
+		</LinearGradientBrush>
 	</Window.Resources>
 	<Window.Triggers>
 		<EventTrigger RoutedEvent="local:MainWindow.SynchronizationStarted">
@@ -97,16 +105,10 @@
                     <local:InfoBox x:Name="progressInfoBox" MessageConfirmed="progressInfoBox_MessageConfirmed" InfoBoxType="Error" IconSize="24" Visibility="Collapsed" Grid.Row="2" />
                 </Grid>
 			</Border>
-			<Border x:Name="welcomeBorder" CornerRadius="3,3,3,3" BorderThickness="1,1,1,1" BorderBrush="#FF135C00" Grid.Row="1">
+			<Border x:Name="welcomeBorder" CornerRadius="3,3,3,3" BorderThickness="1,1,1,1" BorderBrush="#FF135C00" Grid.Row="1" Background="{DynamicResource WarningBrush}">
 				<Border.DataContext>
 					<local:ProgramSettings/>
 				</Border.DataContext>
-				<Border.Background>
-					<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-						<GradientStop Color="#FFDAFFDF" Offset="0"/>
-						<GradientStop Color="#FF81DA8B" Offset="1"/>
-					</LinearGradientBrush>
-				</Border.Background>
 				<Grid HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="8,8,8,8" Grid.Row="1">
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto"/>
@@ -116,24 +118,28 @@
 						<ColumnDefinition Width="Auto"/>
 						<ColumnDefinition Width="*"/>
 					</Grid.ColumnDefinitions>
-					<Image Source="Images\Star.png" Width="128" Height="128" Grid.RowSpan="2" VerticalAlignment="Top" HorizontalAlignment="Left"/>
-					<TextBlock FontSize="16" FontWeight="Bold" Text="Welcome to TieCal " TextWrapping="Wrap" Grid.Column="1" Margin="8,0,0,0"/>
-					<StackPanel VerticalAlignment="Top" Grid.Column="2" Grid.Row="1" Margin="10,0,0,0">
+                    <Grid Grid.Column="0" Grid.RowSpan="3" Visibility="Collapsed" x:Name="bdOkImage">
+                        <Image Source="Images\Star.png" Width="128" Height="128" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                        <Image VerticalAlignment="Top" HorizontalAlignment="Left" Width="64" Height="64" Margin="64,64,0,0" Source="Images\Apply64.png" x:Name="imgOverlay" />
+                    </Grid>
+                    <TextBlock FontSize="16" FontWeight="Bold" Text="Welcome to TieCal " TextWrapping="Wrap" Grid.Column="1" Margin="8,0,0,0"/>
+					<StackPanel VerticalAlignment="Top" Grid.Column="2" Grid.Row="1" Margin="10,0,25,0">
 						<TextBlock d:LayoutOverrides="Width" Text="Before you can start synchronizing, you must select the database which contains the calendar entries." TextWrapping="Wrap" x:Name="txtWelcomeText"/>
-						<StackPanel Orientation="Horizontal" Margin="12,5,0,0" VerticalAlignment="Center">
-							<Image Width="16" Height="16" Source="Images\warning-16.png" Margin="0,0,2,0" Visibility="{Binding Path=NotesDatabase, Converter={StaticResource StringEmptyToVisibilityConverter}, Mode=Default}"/>
-							<TextBlock Text="Lotus Notes DB:" TextWrapping="Wrap" Width="100"/>
-							<TextBlock Margin="3,0,2,0" x:Name="txtNotesDb" Text="{Binding Path=NotesDatabase, Mode=Default}" />
-							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" ><Hyperlink x:Name="lnkChangeDb" Click="lnkChangeDb_Click" ><Run Text="Change..."/></Hyperlink></TextBlock>
+						<StackPanel Orientation="Horizontal" Margin="12,5,0,0" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+							<Border Width="16" Height="16" Margin="0,0,2,0">
+								<Image Width="16" Height="16" Source="Images\warning-16.png" Visibility="{Binding Path=NotesDatabase, Converter={StaticResource StringEmptyToVisibilityConverter}, Mode=Default}" x:Name="image" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<TextBlock Text="Lotus Notes DB:" TextWrapping="Wrap" Width="110" FontWeight="Bold"/>
+							<TextBlock Margin="3,0,2,0" x:Name="txtNotesDb" Text="{Binding Path=NotesDatabase, Mode=Default}" MinWidth="200" />
+							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" VerticalAlignment="Center" ><Hyperlink x:Name="lnkChangeDb" Click="lnkChangeDb_Click" ><Run Text="Change..."/></Hyperlink></TextBlock>
 						</StackPanel>
-						<StackPanel Orientation="Horizontal" Width="516" Height="14.483" Margin="12,5,0,0">
-							<TextBlock Text="Reminders:" TextWrapping="Wrap" Width="100"/>
-							<TextBlock Text="{Binding Path=ReminderSettingAsString, Mode=Default}" TextWrapping="Wrap" x:Name="txtReminders"/>
-							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" ><Hyperlink x:Name="lnkChangeReminderSettings" Click="lnkChangeReminderSettings_Click"><Run Text="Change..."/></Hyperlink></TextBlock>
+						<StackPanel Orientation="Horizontal" Margin="12,5,0,0">
+							<TextBlock Text="Reminders:" TextWrapping="Wrap" Width="110" FontWeight="Bold" Margin="17,0,0,0"/>
+							<TextBlock Margin="3,0,2,0" Text="{Binding Path=ReminderSettingAsString, Mode=Default}" TextWrapping="Wrap" x:Name="txtReminders" MinWidth="200"/>
+							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" VerticalAlignment="Center" ><Hyperlink x:Name="lnkChangeReminderSettings" Click="lnkChangeReminderSettings_Click"><Run Text="Change..."/></Hyperlink></TextBlock>
 						</StackPanel>
 						<CheckBox Content="Confirm before merging changes" Margin="12,5,0,0" x:Name="chkConfirmMerge" ToolTip="Checking this box will show changes before merging them to Outlook." IsChecked="{Binding Path=ConfirmMerge, Mode=Default}"/>
 					</StackPanel>
-					<Image VerticalAlignment="Top" HorizontalAlignment="Left" Width="64" Height="64" Margin="64,64,0,0" Grid.RowSpan="3" Source="Images\Fail64.png" x:Name="imgOverlay" />
 				</Grid>
 			</Border>
 		</Grid>

@@ -21,6 +21,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
+using System.Windows.Media.Animation;
 
 
 namespace TieCal
@@ -93,18 +94,21 @@ namespace TieCal
             else
                 syncWindow.RaiseEvent(new RoutedEventArgs(SynchronizationEndedEvent));
         }
+
         private static void IsReadyToSynchronizeProperty_Changed(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
             MainWindow syncWindow = (MainWindow)sender;
             if ((bool)e.NewValue)
             {
                 syncWindow.txtWelcomeText.Text = "You are ready to start synchronizing your calendar. Click \"Synchronize\" to start the synchronization";
-                syncWindow.imgOverlay.Source = new BitmapImage(new Uri("pack://application:,,,/Images/Apply64.png"));
+                syncWindow.bdOkImage.Visibility = Visibility.Visible;
+                syncWindow.welcomeBorder.Background = (Brush)syncWindow.FindResource("OkBrush");
             }
             else
             {
-                syncWindow.txtWelcomeText.Text = "Before you can start synchronizing, you must enter your notes password and select the database which contains the calendar entries";
-                syncWindow.imgOverlay.Source = new BitmapImage(new Uri("pack://application:,,,/Images/Fail64.png"));
+                syncWindow.txtWelcomeText.Text = "Before you can start synchronizing, you must select the database which contains the calendar entries";
+                syncWindow.bdOkImage.Visibility = Visibility.Collapsed;
+                syncWindow.welcomeBorder.Background = (Brush)syncWindow.FindResource("WarningBrush");
             }
         }
         private NotesReader _notesReader;
@@ -166,11 +170,10 @@ namespace TieCal
             wsReadNotes.StartWork();
             wsReadOutlook.StartWork();
         }
-
-        private bool AskForPassword()
+        internal static bool AskForPassword()
         {
             PasswordDialog dlg = new PasswordDialog();
-            dlg.Owner = this;
+            //dlg.Owner = this;
             dlg.RememberPassword = ProgramSettings.Instance.RememberPassword;
             var response = dlg.ShowDialog();
             if (response == false)
@@ -322,6 +325,7 @@ namespace TieCal
             if (dlg.ShowDialog() == true)
             {
                 ProgramSettings.Instance.NotesDatabase = dlg.NotesDatabase;
+                UpdateIsReadyState();
             }
         }
 
@@ -333,6 +337,7 @@ namespace TieCal
                 ProgramSettings.Instance.ReminderMode = dlg.ReminderMode;
                 if (ProgramSettings.Instance.ReminderMode == ReminderMode.Custom)
                     ProgramSettings.Instance.ReminderMinutesBeforeStart = dlg.ReminderMinutes;
+                UpdateIsReadyState();
             }
         }
 
