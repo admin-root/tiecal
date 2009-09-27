@@ -24,7 +24,7 @@
 		</StackPanel>
 		<ComboBox x:Name="cmbNotesDB" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" Margin="4,2,4,2"/>
 		<Button Padding="12,1,12,1" Content="Refresh" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Margin="0,0,8,0"/>
-		<TextBlock VerticalAlignment="Top" TextWrapping="Wrap" Grid.Row="2" HorizontalAlignment="Right" Margin="0,0,9,0" Grid.Column="1" Grid.ColumnSpan="2"><Run FontWeight="Bold" Text="Hint:"/><Run Text=" It is most often named &quot;"/><Run FontStyle="Italic" Text="data\yourname.nsf"/><Run Text="&quot;"/></TextBlock>
+		<TextBlock VerticalAlignment="Top" TextWrapping="Wrap" Grid.Row="2" HorizontalAlignment="Right" Margin="0,0,9,0" Grid.Column="1" Grid.ColumnSpan="2"><Run FontWeight="Bold" Text="Hint:"/><Run Text=" It is most often named &quot;"/><Run FontStyle="Italic" Text="mail\yourname.nsf"/><Run Text="&quot;"/></TextBlock>
 		<Grid Grid.Column="0" Grid.Row="3" Grid.RowSpan="1" Grid.ColumnSpan="4" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="0,18,0,0">
 			<UniformGrid Rows="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0">
 				<Button Content="OK" Margin="4,8,4,8" Padding="12,2,12,2" VerticalAlignment="Center" x:Name="btnOk" IsDefault="True" Click="btnOk_Click"/>

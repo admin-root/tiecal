@@ -123,6 +123,7 @@ namespace TieCal
             wsReadOutlook.SetupWorker(_outlookManager.FetchCalendarWorker);
             wsMergeEntries.SetupWorker(_calendarMerger.Worker);
             wsApplyChanges.SetupWorker(_outlookManager.MergeCalendarWorker);
+            Grid.SetRow(welcomeBorder, 0);
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
 
