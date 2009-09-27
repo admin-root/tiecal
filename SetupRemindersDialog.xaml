@@ -23,7 +23,7 @@
         </StackPanel>
         <Image HorizontalAlignment="Left" Width="64" Height="64" Grid.RowSpan="3" Source="Images\alarm-64.png" Margin="8,0,8,8" VerticalAlignment="Top" />
         <StackPanel Grid.Column="1" Grid.Row="1" Margin="28,8,0,0">
-            <RadioButton x:Name="rdoDisable" Margin="0,2,0,0">
+            <RadioButton x:Name="rdoDisable" Margin="0,2,0,0" IsChecked="True">
                 <TextBlock TextWrapping="Wrap" Margin="4,0,0,0"><Run Text="Disable Reminders   "/><Run Foreground="#FFA8AAB0" Text="Synchronized entries will never remind you when a meeting is due - regardless of Notes or Outlook settings." /></TextBlock>
             </RadioButton>
             <RadioButton x:Name="rdoOutlook" Margin="0,2,0,0">
