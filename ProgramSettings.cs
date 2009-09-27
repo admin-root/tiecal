@@ -26,12 +26,18 @@ namespace TieCal
         {
             ReminderMode = ReminderMode.NoReminder;
             ReminderMinutesBeforeStart = 15;
+            ConfirmMerge = true;
         }
 
-        private static ProgramSettings _instance = ProgramSettings.LoadSettings();
+        private static ProgramSettings _instance;
         public static ProgramSettings Instance
         {
-            get { return _instance; }
+            get 
+            {
+                if (_instance == null)
+                    _instance = LoadSettings();
+                return _instance; 
+            }
         }
         /// <summary>
         /// Gets the filename where settings are saved.
@@ -78,8 +84,27 @@ namespace TieCal
         public string NotesDatabase { get; set; }
         public string NotesPassword { get; set; }
         public bool RememberPassword { get; set; }
+        public bool ConfirmMerge { get; set; }
         public ReminderMode ReminderMode { get; set; }
         public int ReminderMinutesBeforeStart { get; set; }
+
+        public string ReminderSettingAsString
+        {
+            get
+            {
+                switch (ReminderMode)
+                {
+                    case ReminderMode.NoReminder:
+                        return "Remove all reminders";
+                    case ReminderMode.OutlookDefault:
+                        return "Let outlook specify reminder";
+                    case ReminderMode.Custom:
+                        return String.Format("Remind {0} minutes before meetings", ReminderMinutesBeforeStart);
+                    default:
+                        return "Unknown setting (" + ReminderMode.ToString() + ")";
+                }
+            }
+        }
     }
 
     public enum ReminderMode
