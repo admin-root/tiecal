@@ -7,6 +7,7 @@
     Title="TieCal Synchronizer" x:Name="window" 
     xmlns:local="clr-namespace:TieCal" Width="700" Height="560" Icon="Images\tiecal.ico">
 	<Window.Resources>
+		<local:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter"/>
 		<local:BoolToOppositeBoolConverter x:Key="BoolToOppositeBoolConverter"/>
 		<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 		<Storyboard x:Key="OnSynchronizationStarted1">
@@ -114,18 +115,19 @@
 					<Image Source="Images\Star.png" Width="128" Height="128" Grid.RowSpan="2" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 					<TextBlock FontSize="16" FontWeight="Bold" Text="Welcome to TieCal " TextWrapping="Wrap" Grid.Column="1" Margin="8,0,0,0"/>
 					<StackPanel VerticalAlignment="Top" Grid.Column="2" Grid.Row="1" Margin="10,0,0,0">
-						<TextBlock d:LayoutOverrides="Width" Text="Before you can start synchronizing, you must enter your notes password and select the database which contains the calendar entries" TextWrapping="Wrap" x:Name="txtWelcomeText"/>
-						<StackPanel Orientation="Horizontal" Margin="4,12,0,0">
+						<TextBlock d:LayoutOverrides="Width" Text="Before you can start synchronizing, you must select the database which contains the calendar entries." TextWrapping="Wrap" x:Name="txtWelcomeText"/>
+						<StackPanel Orientation="Horizontal" Margin="4,12,0,0" VerticalAlignment="Center">
+							<Image Width="16" Height="16" Source="Images\warning-16.png" Margin="0,0,2,0" Visibility="{Binding Path=NotesDatabase, Converter={StaticResource StringEmptyToVisibilityConverter}, Mode=Default}"/>
 							<TextBlock Text="Lotus Notes DB:" TextWrapping="Wrap" Width="100"/>
 							<TextBlock Margin="3,0,2,0" x:Name="txtNotesDb" Text="{Binding Path=NotesDatabase, Mode=Default}" />
-							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" ><Hyperlink>Change...</Hyperlink> </TextBlock>
+							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" ><Hyperlink x:Name="lnkChangeDb" Click="lnkChangeDb_Click" ><Run Text="Change..."/></Hyperlink></TextBlock>
 						</StackPanel>
 						<StackPanel Orientation="Horizontal" Width="516" Height="14.483" Margin="4,2,0,0">
 							<TextBlock Text="Reminders:" TextWrapping="Wrap" Width="100"/>
 							<TextBlock Text="{Binding Path=ReminderSettingAsString, Mode=Default}" TextWrapping="Wrap" x:Name="txtReminders"/>
-							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" ><Hyperlink>Change...</Hyperlink></TextBlock>
+							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" ><Hyperlink x:Name="lnkChangeReminderSettings" Click="lnkChangeReminderSettings_Click">Change...</Hyperlink></TextBlock>
 						</StackPanel>
-						<CheckBox Content="Confirm before merging changes" Margin="4,2,0,0" x:Name="chkConfirmMerge" ToolTip="Checking this box will show changes before merging them to Outlook." IsChecked="{Binding Path=ConfirmMerge, Mode=Default}"/>
+						<CheckBox Content="Confirm before merging changes" Margin="4,4,0,0" x:Name="chkConfirmMerge" ToolTip="Checking this box will show changes before merging them to Outlook." IsChecked="{Binding Path=ConfirmMerge, Mode=Default}"/>
 					</StackPanel>
 					<Image VerticalAlignment="Top" HorizontalAlignment="Left" Width="64" Height="64" Margin="64,64,0,0" Grid.RowSpan="3" Source="Images\Fail64.png" x:Name="imgOverlay" />
 				</Grid>
