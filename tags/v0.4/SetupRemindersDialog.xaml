@@ -1,0 +1,47 @@
+﻿<Window
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	x:Class="TieCal.SetupRemindersDialog"
+	x:Name="Window"
+	Title="Setup Reminders"
+	Width="500" SizeToContent="Height">
+
+    <Grid x:Name="LayoutRoot" Margin="0,4,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Margin="8,0,8,0" VerticalAlignment="Top" Grid.Column="1" Grid.ColumnSpan="2">
+            <TextBlock Text="Select Reminder Settings" FontWeight="Bold" Margin="0,0,0,6" />
+            <TextBlock Text="Please select how and if you want your synchronized entries to remind you before each meeting." TextWrapping="Wrap" />
+        </StackPanel>
+        <Image HorizontalAlignment="Left" Width="64" Height="64" Grid.RowSpan="3" Source="Images\alarm-64.png" Margin="8,0,8,8" VerticalAlignment="Top" />
+        <StackPanel Grid.Column="1" Grid.Row="1" Margin="28,8,0,0">
+            <RadioButton x:Name="rdoDisable" Margin="0,2,0,0" IsChecked="True">
+                <TextBlock TextWrapping="Wrap" Margin="4,0,0,0"><Run Text="Disable Reminders   "/><Run Foreground="#FFA8AAB0" Text="Synchronized entries will never remind you when a meeting is due - regardless of Notes or Outlook settings." /></TextBlock>
+            </RadioButton>
+            <RadioButton x:Name="rdoOutlook" Margin="0,2,0,0">
+                <TextBlock TextWrapping="Wrap" Margin="4,0,0,0"><Run Text="Use Outlook settings    "/><Run Foreground="#FFA8AAB0" Text="TieCal will let Outlook decide whether reminders should be used or not."/></TextBlock>
+            </RadioButton>
+            <RadioButton x:Name="rdoCustom" VerticalAlignment="Stretch" Margin="0,2,0,0">
+                <StackPanel Orientation="Horizontal"  VerticalAlignment="Center" Margin="4,0,0,0">
+                    <TextBlock TextWrapping="Wrap" Text="Always warn me " VerticalAlignment="Center"/>
+                    <TextBox x:Name="txtMinutes" Width="30" Margin="2,0,2,0"/>
+                    <TextBlock TextWrapping="Wrap" Text="minutes before a meeting starts." VerticalAlignment="Center"/>
+                </StackPanel>
+            </RadioButton>
+        </StackPanel>
+		<Grid Grid.Column="0" Grid.Row="3" Grid.RowSpan="1" Grid.ColumnSpan="4" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="0,18,0,0">
+            <UniformGrid Rows="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0">
+                <Button Content="OK" Margin="4,8,4,8" Padding="12,2,12,2" VerticalAlignment="Center" x:Name="btnOk" IsDefault="True" Click="btnOk_Click"/>
+                <Button Padding="12,2,12,2" Content="Cancel" VerticalAlignment="Center" IsCancel="True" Click="btnCancel_Click" />
+            </UniformGrid>
+        </Grid>
+    </Grid>
+</Window>
