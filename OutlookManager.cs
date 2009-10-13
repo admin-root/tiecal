@@ -162,8 +162,6 @@ namespace TieCal
             olItem.Subject = entry.Subject;
             olItem.Body = entry.Body;
             olItem.Location = entry.Location;
-            if (entry.Subject.Contains("Pappa"))
-                Debugger.Break();
             //foreach (Recipient rcp in olItem.Recipients)
             //    rcp.Delete();
             //foreach (var name in entry.Participants)

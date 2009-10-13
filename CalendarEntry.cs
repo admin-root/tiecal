@@ -473,6 +473,9 @@ namespace TieCal
             }
             pattern.FirstOccurrence = occurrences[0];
             pattern.NumRepeats = occurrences.Count;
+            pattern.DayOfMonth = pattern.FirstOccurrence.Day;
+            pattern.DayOfWeek = pattern.FirstOccurrence.DayOfWeek;
+            pattern.MonthOfYear = pattern.FirstOccurrence.Month;            
             return pattern;
         }
 
