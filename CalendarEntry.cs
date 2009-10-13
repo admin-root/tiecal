@@ -30,7 +30,6 @@ namespace TieCal
         public CalendarEntry()
         {
             Participants = new List<string>();
-            Occurrences = new List<DateTime>();
             Categories = new List<string>();
             OptionalParticipants = new List<string>();
         }
@@ -46,7 +45,6 @@ namespace TieCal
             Body = copy.Body;
             Subject = copy.Subject;
             NotesID = copy.NotesID;
-            Occurrences.Add(newStartTime);
             StartTime = newStartTime;
             EndTime = newStartTime + copy.Duration;
             Participants.AddRange(copy.Participants);
@@ -162,17 +160,13 @@ namespace TieCal
         /// </summary>
         public bool IsAllDay { get; set; }
         /// <summary>
-        /// Gets or sets the list of dates when this entry occurrs. For non-repeating events, this contains only one item (the <see cref="StartTime"/>)
-        /// </summary>
-        public List<DateTime> Occurrences { get; set; }
-        /// <summary>
         /// Gets the duration of the meeting.
         /// </summary>
         public TimeSpan Duration { get { return EndTime - StartTime; } }
         /// <summary>
-        /// Gets a value indicating whether this calendar entry is a repeating event. To get the repeating events, either look at the <see cref="Occurrences"/> property or use the <see cref="RepeatPatternAnalyzer"/> to get a proper repeat pattern.
+        /// Gets a value indicating whether this calendar entry is a repeating event. To get the repeating events, either look at the <see cref="SetRepeatingPattern"/> method.
         /// </summary>
-        public bool IsRepeating { get { return Occurrences.Count > 1; } }
+        public bool IsRepeating { get; private set; }
         /// <summary>
         /// Gets or sets the time zone that the <see cref="StartTime"/> is expressed in
         /// </summary>
@@ -213,6 +207,41 @@ namespace TieCal
                 return TimeZoneInfo.ConvertTimeFromUtc(EndTime, TimeZoneInfo.Local);
             }
         }
+
+        private RepeatPattern _repeatPattern;
+        public RepeatPattern RepeatPattern
+        {
+            get
+            {
+                if (!IsRepeating)
+                    throw new InvalidOperationException("Cannot get repeat pattern for non-repeating events");
+                return _repeatPattern;
+            }
+        }
+
+        public bool HasValidRepeatPattern
+        {
+            get
+            {
+                if (!IsRepeating)
+                    throw new InvalidOperationException("Cannot check repeat pattern for non-repeating events");
+                if (_repeatPattern == null)
+                    return false;
+                return true;
+            }
+        }
+
+        public void SetRepeatPattern(IList<DateTime> occurrences)
+        {
+            _repeatPattern = RepeatPattern.CreateFromOccurrences(occurrences);
+            IsRepeating = true;
+        }
+
+        public void SetRepeatPattern(RecurrencePattern outlookRecurrencePattern)
+        {
+            _repeatPattern = RepeatPattern.CreateFromOutlookPattern(outlookRecurrencePattern);
+            IsRepeating = true;
+        }
         /// <summary>
         /// Gets a value indicating whether this calendar entry occurs in the specified interval.
         /// </summary>
@@ -221,10 +250,7 @@ namespace TieCal
         /// <returns></returns>
         public bool OccursInInterval(DateTime start, DateTime end)
         {
-            foreach (var occurrence in Occurrences)
-                if (occurrence > start && occurrence < end)
-                    return true;
-            return false;
+            throw new NotImplementedException("This isn't implemented yet");
         }
 
         /// <summary>
@@ -239,13 +265,25 @@ namespace TieCal
                 return false;
             if (Body != other.Body)
                 return false;
-            if (StartTime != other.StartTime || EndTime != other.EndTime)
+            if (IsAllDay != other.IsAllDay)
                 return false;
+            if (IsAllDay)
+            {
+                if (StartTime.Date != other.StartTime.Date ||
+                    EndTime.Date != other.EndTime.Date)
+                    return false;
+            }
+            else
+            {
+                if (StartTime != other.StartTime || EndTime != other.EndTime)
+                    return false;
+            }
             if (Location != other.Location)
                 return false;
             return true;
         }
 
+        
         /// <summary>
         /// Determines whether this calendar entry differs from the specified calendar entry for the sake of merging.
         /// </summary>
@@ -271,15 +309,28 @@ namespace TieCal
                 diffs.Add("Subject");
             if (Body != other.Body)
                 diffs.Add("Body");
-            if (StartTime != other.StartTime)
-                diffs.Add("StartTime");
-            if (EndTime != other.EndTime)
-                diffs.Add("EndTime");
+            if (IsAllDay != other.IsAllDay)
+                diffs.Add("Is All Day");
+            if (IsAllDay)
+            {
+                if (StartTime.Date != other.StartTime.Date)
+                    diffs.Add("Start Date");
+                if (EndTime.Date != other.EndTime.Date)
+                    diffs.Add("End Date");
+            }
+            else
+            {
+                if (StartTime != other.StartTime)
+                    diffs.Add("Start Time");
+                if (EndTime != other.EndTime)
+                    diffs.Add("End Time");
+            }
             if (Location != other.Location)
                 diffs.Add("Location");
             return diffs;
         }
 
+        
         /// <summary>
         /// Gets a string representation of this calendar entry.
         /// </summary>        
@@ -292,29 +343,87 @@ namespace TieCal
     /// <summary>
     /// Analyzer for a list of <see cref="DateTime"/> objects which tries to find a pattern that can be applied when creating/updating outlook entries
     /// </summary>
-    public class RepeatPatternAnalyzer
+    public class RepeatPattern
     {
-        private IList<DateTime> Occurrences { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RepeatPatternAnalyzer"/> class by analyizing the list of occurrences.
-        /// </summary>
-        /// <param name="occurrences">The occurrences to analyze in order to calculate the repeat pattern.</param>
-        public RepeatPatternAnalyzer(IList<DateTime> occurrences)
+        private RepeatPattern()
         {
+        }
+        public static RepeatPattern CreateFromOutlookPattern(RecurrencePattern olPattern)
+        {
+            RepeatPattern pattern = new RepeatPattern();
+            switch (olPattern.RecurrenceType)
+            {
+                case OlRecurrenceType.olRecursDaily:
+                    pattern.IsDaily = true;
+                    break;
+                case OlRecurrenceType.olRecursMonthly:
+                    pattern.IsMonthly = true;
+                    pattern.DayOfMonth = olPattern.DayOfMonth;
+                    break;
+                case OlRecurrenceType.olRecursWeekly:
+                    pattern.IsWeekly = true;
+                    switch (olPattern.DayOfWeekMask)
+                    {
+                        case OlDaysOfWeek.olFriday:
+                            pattern.DayOfWeek = DayOfWeek.Friday;
+                            break;
+                        case OlDaysOfWeek.olMonday:
+                            pattern.DayOfWeek = DayOfWeek.Monday;
+                            break;
+                        case OlDaysOfWeek.olSaturday:
+                            pattern.DayOfWeek = DayOfWeek.Saturday;
+                            break;
+                        case OlDaysOfWeek.olSunday:
+                            pattern.DayOfWeek = DayOfWeek.Sunday;
+                            break;
+                        case OlDaysOfWeek.olThursday:
+                            pattern.DayOfWeek = DayOfWeek.Thursday;
+                            break;
+                        case OlDaysOfWeek.olTuesday:
+                            pattern.DayOfWeek = DayOfWeek.Tuesday;
+                            break;
+                        case OlDaysOfWeek.olWednesday:
+                            pattern.DayOfWeek = DayOfWeek.Wednesday;
+                            break;
+                        default:
+                            throw new ArgumentException("The outlook pattern cannot be converted into a correct RepeatPattern: occurrs several days a week");
+                    }
+                    break;
+                case OlRecurrenceType.olRecursYearly:
+                    pattern.IsYearly = true;
+                    pattern.DayOfMonth = olPattern.DayOfMonth;
+                    pattern.MonthOfYear = olPattern.MonthOfYear;
+                    break;
+                default:
+                    throw new ArgumentException("Unknown repeat pattern from outlook: " + olPattern.RecurrenceType.ToString());
+            }
+            pattern.NumRepeats = olPattern.Occurrences;
+            pattern.FirstOccurrence = olPattern.PatternStartDate;
+            return pattern;
+        }
+
+        public static RepeatPattern TryCreateFromOccurrences(IList<DateTime> occurrences)
+        {
+            RepeatPattern pattern = new RepeatPattern();
             if (occurrences.Count < 2)
                 throw new ArgumentException("Cannot calculate repeat pattern unless there's at least two occurrences", "occurrences");
-            Occurrences = occurrences;
-            SameMinute = true;
-            SameHour = true;
-            SameDayOfMonth = true;
-            SameDayOfWeek = true;
-            SameMonth = true;
-
-            for (int i = 1; i < occurrences.Count; i++)
+            var local = from occ in occurrences
+                        select occ.ToLocalTime();
+            List<DateTime> LocalOccurrences = new List<DateTime>(local);
+            bool SameMinute = true;
+            bool SameHour = true;
+            bool SameDayOfMonth = true;
+            bool SameDayOfWeek = true;
+            bool SameMonth = true;
+            // TODO: this interval can vary between occurrances (and still be valid)
+            pattern.IntervalTimeLength = LocalOccurrences[1] - LocalOccurrences[0];
+            for (int i = 1; i < LocalOccurrences.Count; i++)
             {
-                var prev = occurrences[i - 1];
-                var cur = occurrences[i];
+                var prev = LocalOccurrences[i - 1];
+                var cur = LocalOccurrences[i];
+                var diff = cur - prev;
+                //if (IntervalTimeLength != diff)
+                //  Debugger.Break();
                 if (cur.Minute != prev.Minute)
                     SameMinute = false;
                 if (cur.Hour != prev.Hour)
@@ -326,85 +435,94 @@ namespace TieCal
                 if (cur.Month != prev.Month)
                     SameMonth = false;
             }
-            
-            if (!IsValid)
-                throw new ArgumentException ("The occurrences does not map to a valid repeat pattern", "occurrences");
+
+            if (!(SameMinute || SameHour || SameDayOfMonth || SameDayOfWeek || SameMonth))
+                // No pattern was found
+                return null;
+
+            // TODO: Maybe also make sure it's only one of the above
+            int intervalDays = (int)Math.Round(pattern.IntervalTimeLength.TotalDays);
+            if (intervalDays > 364 && intervalDays < 367)
+            {
+                // Yearly?
+                if (SameMonth && SameDayOfMonth)
+                    pattern.IsYearly = true;
+                else
+                    return null;
+            }
+            else if (intervalDays < 32 && intervalDays > 27)
+            {
+                if (SameDayOfMonth)
+                    pattern.IsMonthly = true;
+                else
+                    return null;
+            }
+            else if (intervalDays == 7)
+            {
+                if (SameDayOfWeek)
+                    pattern.IsWeekly = true;
+                else
+                    return null;
+            }
+            else if (intervalDays == 1)
+            {
+                if (SameHour && SameMinute)
+                    pattern.IsDaily = true;
+                else
+                    return null;
+            }
+            pattern.FirstOccurrence = occurrences[0];
+            pattern.NumRepeats = occurrences.Count;
+            return pattern;
         }
 
+        public static RepeatPattern CreateFromOccurrences(IList<DateTime> occurrences)
+        {           
+            var pattern = TryCreateFromOccurrences(occurrences);
+            if (pattern == null)
+                throw new ArgumentException("Unable to generate a pattern based on the list of occurrences", "occurrences");
+            return pattern;
+        }
+
+        
         /// <summary>
         /// Gets the interval between repeats. The unit depends on the IsDaily, IsWeekly etc. properties
         /// </summary>
         public int Interval { get { return 1; } }
-
         /// <summary>
-        /// Gets a value indicating whether this instance is valid, i.e. the occurrences were mapped to something that makes sense.
+        /// Gets or sets the length of the interval in actual time.
         /// </summary>
-        private bool IsValid
-        {
-            get
-            {
-                if (!(SameMinute || SameHour || SameDayOfMonth || SameDayOfWeek || SameMonth))
-                    // No pattern was found
-                    return false;
-                if (!IsDaily && !IsWeekly && !IsMonthly && !IsYearly)
-                    return false;
-                // TODO: Maybe also make sure it's only one of the above
-                return true;
-            }
-        }
-        public int NumRepeats { get { return Occurrences.Count; } }
-        private bool SameMinute { get; set; }
-        private bool SameHour { get; set; }
-        private bool SameTime { get { return SameMinute && SameHour; } }
-        private bool SameDayOfMonth { get; set; }
-        private bool SameDayOfWeek { get; set; }
-        private bool SameMonth { get; set; }
-
+        public TimeSpan IntervalTimeLength { get; set; }
+        /// <summary>
+        /// Gets or sets the number of occurrences for this repeat pattern
+        /// </summary>
+        public int NumRepeats { get; set; }
+        
+        public DayOfWeek DayOfWeek { get; set; }
+        public int DayOfMonth { get; set; }
+        public int MonthOfYear { get; set; }
+        public DateTime FirstOccurrence { get; set; }
         /// <summary>
         /// Gets a value indicating whether this is a yearly event.
         /// </summary>
         public bool IsYearly
         {
-            get
-            {
-                if (!SameTime)
-                    return false;
-                if (!SameMonth && !SameDayOfMonth)
-                    return false;
-                
-                return true;
-            }
+            get; set;
         }
-
+        
         /// <summary>
         /// Gets a value indicating whether this is a monthly event.
         /// </summary>
         public bool IsMonthly
         {
-            get
-            {
-                if (!SameTime)
-                    return false;
-                if (!SameDayOfMonth)
-                    return false;
-                if (SameMonth)
-                    return false;
-                return true;
-            }
+            get; set;
         }
         /// <summary>
         /// Gets a value indicating whether this is a weekly event.
         /// </summary>
         public bool IsWeekly
         {
-            get
-            {
-                if (!SameTime)
-                    return false;
-                if (!SameDayOfWeek)
-                    return false;
-                return true;
-            }
+            get; set;
         }
 
         /// <summary>
@@ -412,15 +530,8 @@ namespace TieCal
         /// </summary>
         public bool IsDaily
         {
-            get
-            {
-                if (!SameTime)
-                    return false;
-                if (SameDayOfWeek || SameDayOfMonth)
-                    return false;
-                
-                return true;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -429,19 +540,17 @@ namespace TieCal
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            if (!IsValid)
-                return "Invalid Repeat Pattern";
             if (IsDaily)
                 sb.Append("Daily event.");
-            if (IsWeekly)
-                sb.Append("Weekly event.");
+            if (IsWeekly) 
+                sb.AppendFormat("Weekly event, Every {0}.", DayOfWeek);
             if (IsMonthly)
-                sb.Append("Monthly event.");
+                sb.AppendFormat("Monthly event: On day {0}.", DayOfMonth);
             if (IsYearly)
-                sb.Append("Yearly event.");
+                sb.AppendFormat("Yearly event: {0:MMMM} {0:d}.", FirstOccurrence);
             if (sb.Length == 0)
                 sb.Append("Unknown repeat pattern");
-            sb.AppendFormat("{0} occurrences, interval: {1}", NumRepeats, Interval);
+            sb.AppendFormat(" {0} occurrences with interval {1}. Starts {2}", NumRepeats, Interval, FirstOccurrence.ToShortTimeString());
 
             return sb.ToString();
         }

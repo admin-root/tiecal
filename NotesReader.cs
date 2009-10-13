@@ -65,6 +65,7 @@ namespace TieCal
             TimeSpan endTZOffset    = TimeSpan.FromTicks(0);
             TimeSpan localTZOffset  = TimeSpan.FromTicks(0);
             CalendarEntry newEntry = new CalendarEntry();
+            List<DateTime> occurrences = new List<DateTime>();
             newEntry.NotesID = notesEntry.UniversalID;
             NotesDocument doc = notesEntry.Document;
             Debug.Assert(doc.UniversalID == notesEntry.UniversalID);
@@ -94,7 +95,7 @@ namespace TieCal
                     foreach (object time in (object[])times)
                     {
                         var nTime = time as NotesDateTime;
-                        newEntry.Occurrences.Add((DateTime)nTime.LSGMTTime);
+                        occurrences.Add((DateTime)nTime.LSGMTTime);
                     }
                 }
                 else if (item.Name == "StartTimeZone")
@@ -190,16 +191,22 @@ namespace TieCal
                 newEntry.EndTime = dateItems["EndTime-local"];
                 newEntry.IsAllDay = true;
             }
-            if (!stringItems.ContainsKey("OrgRepeat") && newEntry.Occurrences.Count > 1)
+            if (!stringItems.ContainsKey("OrgRepeat") && occurrences.Count > 1)
             {
-                newEntry.Occurrences.Clear();
-                newEntry.Occurrences.Add(newEntry.StartTime);
+                occurrences.Clear();
+                occurrences.Add(newEntry.StartTime);
+            }
+            if (occurrences.Count > 1)
+            {
+                newEntry.SetRepeatPattern(occurrences);
             }
             //if (newEntry.Subject.Contains("test-two"))
             //    Debugger.Break();
-            Debug.Assert(newEntry.Occurrences.Count > 0);
+            Debug.Assert(occurrences.Count > 0);
             Debug.Assert(newEntry.NotesID != null && newEntry.NotesID.Length > 0);
-
+            if (newEntry.IsRepeating && !newEntry.HasValidRepeatPattern)
+                // Some repeating events cannot be parsed (such as weird holidays (like easter) that occurr on different days each year)
+                return null;
             return newEntry;
         }
 
