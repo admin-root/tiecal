@@ -48,7 +48,7 @@ namespace TieCal
             newEntry.IsAllDay = outlookEntry.AllDayEvent;
             newEntry.Body = outlookEntry.Body;
             newEntry.Subject = outlookEntry.Subject;
-            newEntry.Location = outlookEntry.Location;
+            newEntry.Location = outlookEntry.Location;            
             newEntry.StartTime = outlookEntry.StartUTC;
             newEntry.EndTime = outlookEntry.EndUTC;
             //newEntry.StartTimeZone = outlookEntry.StartTimeZone;
@@ -62,8 +62,7 @@ namespace TieCal
             if (outlookEntry.IsRecurring)
             {
                 var pattern = outlookEntry.GetRecurrencePattern();
-                var rType = pattern.RecurrenceType;
-                Debug.WriteLine(pattern.Occurrences);
+                newEntry.SetRepeatPattern(pattern);
             }
             newEntry.OutlookID = outlookEntry.GlobalAppointmentID;
             return newEntry;
@@ -91,18 +90,18 @@ namespace TieCal
 
             return (AppointmentItem)calendarFolder.Items.Add(OlItemType.olAppointmentItem);
         }
-        private void UpdateRecurrencePattern(AppointmentItem olItem, IList<DateTime> occurences)
-        {
-            if (occurences.Count == 1)
-                return;
-            var analyzer = new RepeatPatternAnalyzer(occurences);
+
+        private void UpdateRecurrencePattern(AppointmentItem olItem, CalendarEntry entry)
+        {            
+            //if (olItem.Subject.Contains("Wasabi"))
+            //    Debugger.Break();
             RecurrencePattern pattern = olItem.GetRecurrencePattern();
-            if (analyzer.IsDaily)
+            if (entry.RepeatPattern.IsDaily)
                 pattern.RecurrenceType = OlRecurrenceType.olRecursDaily;
-            else if (analyzer.IsWeekly)
+            else if (entry.RepeatPattern.IsWeekly)
             {
                 pattern.RecurrenceType = OlRecurrenceType.olRecursWeekly;
-                switch (occurences[0].DayOfWeek)
+                switch (entry.RepeatPattern.DayOfWeek)
                 {
                     case DayOfWeek.Friday:
                         pattern.DayOfWeekMask = OlDaysOfWeek.olFriday;
@@ -130,22 +129,25 @@ namespace TieCal
                         break;
                 }
             }
-            else if (analyzer.IsMonthly)
+            else if (entry.RepeatPattern.IsMonthly)
             {
                 pattern.RecurrenceType = OlRecurrenceType.olRecursMonthly;
-                pattern.DayOfMonth = occurences[0].Day;
+                pattern.DayOfMonth = entry.RepeatPattern.DayOfMonth;
             }
-            else if (analyzer.IsYearly)
+            else if (entry.RepeatPattern.IsYearly)
             {
                 pattern.RecurrenceType = OlRecurrenceType.olRecursYearly;
-                pattern.DayOfMonth = occurences[0].Day;
-                pattern.MonthOfYear = occurences[0].Month;
+                pattern.DayOfMonth = entry.RepeatPattern.DayOfMonth;
+                pattern.MonthOfYear = entry.RepeatPattern.MonthOfYear;
             }
             else
                 return;
-            pattern.Interval = analyzer.Interval;
-            pattern.StartTime = occurences[0];
-            pattern.EndTime = occurences[occurences.Count - 1];
+            pattern.Interval = entry.RepeatPattern.Interval;
+            if (entry.IsAllDay)
+                pattern.PatternStartDate = entry.RepeatPattern.FirstOccurrence.Date;
+            else
+                pattern.PatternStartDate = entry.RepeatPattern.FirstOccurrence;
+            pattern.Occurrences = entry.RepeatPattern.NumRepeats;
         }
         
         /// <summary>
@@ -160,14 +162,20 @@ namespace TieCal
             olItem.Subject = entry.Subject;
             olItem.Body = entry.Body;
             olItem.Location = entry.Location;
-            
+            if (entry.Subject.Contains("Pappa"))
+                Debugger.Break();
             //foreach (Recipient rcp in olItem.Recipients)
             //    rcp.Delete();
             //foreach (var name in entry.Participants)
             //    olItem.Recipients.Add(name);
             //olItem.OptionalAttendees = String.Join(", ", entry.OptionalParticipants.ToArray());
-            olItem.Start = entry.StartTimeLocal;
-            olItem.End = entry.EndTimeLocal;
+            if (!entry.IsRepeating || olItem.GlobalAppointmentID == null)
+            {
+                // We're not allowed to modify these properties of existing repeating events (it's ok for new ones though)
+                olItem.Start = entry.StartTimeLocal;
+                olItem.End = entry.EndTimeLocal;
+                olItem.AllDayEvent = entry.IsAllDay;
+            }
             olItem.UnRead = false;
             if (entry.StartTimeLocal < DateTime.Now || entry.IsAllDay ||
                 ProgramSettings.Instance.ReminderMode == ReminderMode.NoReminder)
@@ -181,12 +189,11 @@ namespace TieCal
                 olItem.ReminderMinutesBeforeStart = ProgramSettings.Instance.ReminderMinutesBeforeStart;
             }
             
-            olItem.AllDayEvent = entry.IsAllDay;
-            UpdateRecurrencePattern(olItem, entry.Occurrences);
-            if (!entry.IsRepeating)
-            {
-                olItem.Save();
-            }
+            if (entry.IsRepeating)
+                UpdateRecurrencePattern(olItem, entry);
+            if (ProgramSettings.Instance.SyncRepeatingEvents == false && entry.IsRepeating == true)
+                Debugger.Break();
+            olItem.Save();
         }
         
         public void DeleteAllEntries()
@@ -240,7 +247,7 @@ namespace TieCal
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.WriteLine("Failed to merge " + modification.Modification + " entry (" + modification.Entry.Subject + "): " + ex.Message);
+                    Debug.WriteLine("Failed to merge " + modification.Modification + " entry (" + modification.Entry.Subject + "): " + ex.Message);                    
                 }
             }
         }

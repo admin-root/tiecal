@@ -88,6 +88,7 @@ namespace TieCal
         public string NotesPassword { get; set; }
         public bool RememberPassword { get; set; }
         public bool ConfirmMerge { get; set; }
+        public bool SyncRepeatingEvents { get; set; }
         private ReminderMode _reminderMode;
         /// <summary>
         /// Gets or sets a value that specifies how reminders should be used for synchronized entries.

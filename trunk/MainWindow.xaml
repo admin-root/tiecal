@@ -139,6 +139,7 @@
 							<TextBlock Margin="8,0,0,0" FontStyle="Italic" FontSize="11" VerticalAlignment="Center" ><Hyperlink x:Name="lnkChangeReminderSettings" Click="lnkChangeReminderSettings_Click"><Run Text="Change..."/></Hyperlink></TextBlock>
 						</StackPanel>
 						<CheckBox Content="Confirm before merging changes" Margin="12,5,0,0" x:Name="chkConfirmMerge" ToolTip="Checking this box will show changes before merging them to Outlook." IsChecked="{Binding Path=ConfirmMerge, Mode=Default}"/>
+                        <CheckBox Content="Include repeating events (BETA!)" Margin="12,5,0,0" x:Name="chkSyncRepeatingEvents" ToolTip="Checking this box will synchronize repeating events from Notes. This feature is currently in beta and may not fully work" IsChecked="{Binding Path=SyncRepeatingEvents, Mode=Default}"/>
 					</StackPanel>
 				</Grid>
 			</Border>

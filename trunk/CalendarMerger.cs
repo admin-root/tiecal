@@ -41,9 +41,15 @@ namespace TieCal
             Worker.ReportProgress(10);
             var lowerLimit = DateTime.Now - TimeSpan.FromDays(30);
             var upperLimit = DateTime.Now + TimeSpan.FromDays(30);
-            var entriesToMerge = from calEntry in NotesEntries
-                                 where calEntry.IsRepeating == false && calEntry.OccursInInterval(lowerLimit, upperLimit)
+
+            IEnumerable<CalendarEntry> entriesToMerge = null;
+            if (ProgramSettings.Instance.SyncRepeatingEvents)
+                entriesToMerge = new List<CalendarEntry>(NotesEntries);
+            else
+                entriesToMerge = from calEntry in NotesEntries
+                                 where calEntry.IsRepeating == false
                                  select calEntry;
+            
             if (Worker.CancellationPending)
             {
                 e.Cancel = true;
