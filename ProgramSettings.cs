@@ -61,10 +61,10 @@ namespace TieCal
             {
                 if (!File.Exists(SaveFilename))
                     return new ProgramSettings();
-                using (TextReader writer = new StreamReader(SaveFilename))
+                using (TextReader reader = new StreamReader(SaveFilename))
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(ProgramSettings));
-                    return (ProgramSettings)serializer.Deserialize(writer);
+                    return (ProgramSettings)serializer.Deserialize(reader);
                 }
             }
             catch (IOException)
