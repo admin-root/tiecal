@@ -126,6 +126,22 @@ namespace TieCal
         public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion
+
+        public string ProgramVersion
+        {
+            get
+            {
+                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(2);
+            }
+        }
+
+        public string ProgramVersionFull
+        {
+            get
+            {
+                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            }
+        }
     }
 
     public enum ReminderMode

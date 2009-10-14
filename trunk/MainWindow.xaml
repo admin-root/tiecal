@@ -122,7 +122,11 @@
                         <Image Source="Images\Star.png" Width="128" Height="128" VerticalAlignment="Top" HorizontalAlignment="Left"/>
                         <Image VerticalAlignment="Top" HorizontalAlignment="Left" Width="64" Height="64" Margin="64,64,0,0" Source="Images\Apply64.png" x:Name="imgOverlay" />
                     </Grid>
-                    <TextBlock FontSize="16" FontWeight="Bold" Text="Welcome to TieCal " TextWrapping="Wrap" Grid.Column="1" Margin="8,0,0,0"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" TextBlock.FontSize="16" TextBlock.FontWeight="Bold" Grid.Column="1" Margin="8,0,0,0" >
+                        <TextBlock Text="Welcome to TieCal v" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Path=ProgramVersion}" ToolTip="{Binding Path=ProgramVersionFull}" />
+                    </StackPanel>
+                    
 					<StackPanel VerticalAlignment="Top" Grid.Column="2" Grid.Row="1" Margin="10,0,25,0">
 						<TextBlock d:LayoutOverrides="Width" Text="Before you can start synchronizing, you must select the database which contains the calendar entries." TextWrapping="Wrap" x:Name="txtWelcomeText"/>
 						<StackPanel Orientation="Horizontal" Margin="12,5,0,0" VerticalAlignment="Center" HorizontalAlignment="Stretch">
@@ -141,7 +145,8 @@
 						<CheckBox Content="Confirm before merging changes" Margin="12,5,0,0" x:Name="chkConfirmMerge" ToolTip="Checking this box will show changes before merging them to Outlook." IsChecked="{Binding Path=ConfirmMerge, Mode=Default}"/>
                         <CheckBox Content="Include repeating events (BETA!)" Margin="12,5,0,0" x:Name="chkSyncRepeatingEvents" ToolTip="Checking this box will synchronize repeating events from Notes. This feature is currently in beta and may not fully work" IsChecked="{Binding Path=SyncRepeatingEvents, Mode=Default}"/>
 					</StackPanel>
-				</Grid>
+                    
+                </Grid>
 			</Border>
 		</Grid>
 	</DockPanel>
