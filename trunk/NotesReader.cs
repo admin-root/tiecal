@@ -181,14 +181,19 @@ namespace TieCal
                 newEntry.StartTimeZone = TimeZoneInfo.Local;
                 newEntry.EndTimeZone = TimeZoneInfo.Local;
                 // Reset the time to zero to reflect that it is all day event
-                newEntry.StartTime = TimeZoneInfo.ConvertTimeToUtc(newEntry.StartTime.Date);
-                newEntry.EndTime = TimeZoneInfo.ConvertTimeToUtc(newEntry.EndTime.Date.AddDays(1));
+                newEntry.StartTime = newEntry.StartTime.Date;
+                newEntry.EndTime = newEntry.EndTime.Date.AddDays(1);
             }
             else if (stringItems["AppointmentType"] == "1")
             {
                 // Anniversary
                 newEntry.StartTime = dateItems["StartTime-local"];
                 newEntry.EndTime = dateItems["EndTime-local"];
+                newEntry.StartTimeZone = TimeZoneInfo.Local;
+                newEntry.EndTimeZone = TimeZoneInfo.Local;
+                // Reset the time to zero to reflect that it is all day event
+                newEntry.StartTime = newEntry.StartTime.Date;
+                newEntry.EndTime = newEntry.EndTime.Date.AddDays(1);
                 newEntry.IsAllDay = true;
             }
             if (!stringItems.ContainsKey("OrgRepeat") && occurrences.Count > 1)
@@ -198,7 +203,14 @@ namespace TieCal
             }
             if (occurrences.Count > 1)
             {
-                newEntry.SetRepeatPattern(occurrences);
+                try
+                {
+                    newEntry.SetRepeatPattern(occurrences);
+                }
+                catch
+                {
+                    return null;
+                }
             }
             //if (newEntry.Subject.Contains("test-two"))
             //    Debugger.Break();

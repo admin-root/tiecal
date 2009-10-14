@@ -194,7 +194,10 @@ namespace TieCal
         {
             get
             {
-                return TimeZoneInfo.ConvertTimeFromUtc(StartTime, TimeZoneInfo.Local);
+                if (IsAllDay)
+                    return StartTime;
+                else
+                    return TimeZoneInfo.ConvertTimeFromUtc(StartTime, TimeZoneInfo.Local);
             }
         }
         /// <summary>
@@ -204,7 +207,10 @@ namespace TieCal
         {
             get
             {
-                return TimeZoneInfo.ConvertTimeFromUtc(EndTime, TimeZoneInfo.Local);
+                if (IsAllDay)
+                    return EndTime;
+                else
+                    return TimeZoneInfo.ConvertTimeFromUtc(EndTime, TimeZoneInfo.Local);
             }
         }
 
@@ -269,9 +275,14 @@ namespace TieCal
                 return false;
             if (IsAllDay)
             {
-                if (StartTime.Date != other.StartTime.Date ||
-                    EndTime.Date != other.EndTime.Date)
-                    return false;
+                // Repeating events cannot be modified in outlook it seems. And also, Outlook sets StartTime to the first in the series
+                // while notes sets it to the current instance.. (TODO: fix!)
+                if (!IsRepeating)
+                {
+                    if (StartTime.Date != other.StartTime.Date ||
+                        EndTime.Date != other.EndTime.Date)
+                        return false;
+                }
             }
             else
             {
@@ -280,6 +291,11 @@ namespace TieCal
             }
             if (Location != other.Location)
                 return false;
+            if (IsRepeating)
+            {
+                if (RepeatPattern.EquivalentTo(other.RepeatPattern))
+                    return false;
+            }
             return true;
         }
 
@@ -313,10 +329,13 @@ namespace TieCal
                 diffs.Add("Is All Day");
             if (IsAllDay)
             {
-                if (StartTime.Date != other.StartTime.Date)
-                    diffs.Add("Start Date");
-                if (EndTime.Date != other.EndTime.Date)
-                    diffs.Add("End Date");
+                if (!IsRepeating)
+                {
+                    if (StartTime.Date != other.StartTime.Date)
+                        diffs.Add("Start Date");
+                    if (EndTime.Date != other.EndTime.Date)
+                        diffs.Add("End Date");
+                }
             }
             else
             {
@@ -327,6 +346,8 @@ namespace TieCal
             }
             if (Location != other.Location)
                 diffs.Add("Location");
+            if (RepeatPattern != other.RepeatPattern)
+                diffs.Add("Repeat Pattern");
             return diffs;
         }
 
@@ -471,6 +492,8 @@ namespace TieCal
                 else
                     return null;
             }
+            else
+                return null;
             pattern.FirstOccurrence = occurrences[0];
             pattern.NumRepeats = occurrences.Count;
             pattern.DayOfMonth = pattern.FirstOccurrence.Day;
@@ -550,12 +573,35 @@ namespace TieCal
             if (IsMonthly)
                 sb.AppendFormat("Monthly event: On day {0}.", DayOfMonth);
             if (IsYearly)
-                sb.AppendFormat("Yearly event: {0:MMMM} {0:d}.", FirstOccurrence);
+                sb.AppendFormat("Yearly event: {0:MMMM} {1}.", FirstOccurrence, DayOfMonth);
             if (sb.Length == 0)
                 sb.Append("Unknown repeat pattern");
-            sb.AppendFormat(" {0} occurrences with interval {1}. Starts {2}", NumRepeats, Interval, FirstOccurrence.ToShortTimeString());
+            sb.AppendFormat(" {0} occurrences", NumRepeats);
 
             return sb.ToString();
+        }
+
+        public bool EquivalentTo(RepeatPattern other)
+        {
+            if (IsYearly != other.IsYearly)
+                return false;
+            if (IsMonthly != other.IsMonthly)
+                return false;
+            if (IsWeekly != other.IsWeekly)
+                return false;
+            if (IsDaily != other.IsDaily)
+                return false;
+            if (DayOfMonth != other.DayOfMonth)
+                return false;
+            if (DayOfWeek != other.DayOfWeek)
+                return false;
+            if (NumRepeats != other.NumRepeats)
+                return false;
+            if (Interval != other.Interval)
+                return false;
+            if (FirstOccurrence != other.FirstOccurrence)
+                return false;
+            return true;
         }
     }
 }

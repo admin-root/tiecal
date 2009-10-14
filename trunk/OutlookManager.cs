@@ -45,14 +45,25 @@ namespace TieCal
         private static CalendarEntry CreateCalendarEntry(AppointmentItem outlookEntry)
         {
             CalendarEntry newEntry = new CalendarEntry();
+            if (outlookEntry.Subject.Contains("test-all-day"))
+                Debugger.Break();
             newEntry.IsAllDay = outlookEntry.AllDayEvent;
             newEntry.Body = outlookEntry.Body;
             newEntry.Subject = outlookEntry.Subject;
-            newEntry.Location = outlookEntry.Location;            
-            newEntry.StartTime = outlookEntry.StartUTC;
-            newEntry.EndTime = outlookEntry.EndUTC;
-            //newEntry.StartTimeZone = outlookEntry.StartTimeZone;
-            //newEntry.EndTimeZone = outlookEntry.EndTimeZone;
+            newEntry.Location = outlookEntry.Location;
+            if (newEntry.IsAllDay)
+            {
+                // Timezones and exact time isn't used for all day events
+                newEntry.StartTime = outlookEntry.Start;
+                newEntry.EndTime = outlookEntry.End;
+            }
+            else
+            {
+                newEntry.StartTime = outlookEntry.StartUTC;
+                newEntry.EndTime = outlookEntry.EndUTC;
+            }
+            newEntry.StartTimeZone = TimeZoneInfo.Local; //outlookEntry.StartTimeZone;
+            newEntry.EndTimeZone = TimeZoneInfo.Local;
             foreach (Recipient recipent in outlookEntry.Recipients)
                 newEntry.Participants.Add(recipent.Name);
             if (outlookEntry.OptionalAttendees != null)

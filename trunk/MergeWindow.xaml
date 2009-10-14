@@ -114,6 +114,7 @@
                 	<StackPanel Orientation="Horizontal" Margin="7,0,0,0" x:Name="pnlRepeatingEvent">
                 		<Image Width="22" Height="22" Source="Images\view-refresh-22.png" Margin="1,1,1,1"/>
                 		<TextBlock Text="This is a repeating event" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Path=Entry.RepeatPattern}" Margin="2,0,0,0" FontSize="10" />
                 	</StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="7,0,0,0" x:Name="pnlAllDayEvent">
                         <Image Width="22" Height="22" Source="Images\weather-clear-22.png" Margin="1,1,1,1"/>
