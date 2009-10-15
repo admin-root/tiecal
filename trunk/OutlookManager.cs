@@ -45,8 +45,6 @@ namespace TieCal
         private static CalendarEntry CreateCalendarEntry(AppointmentItem outlookEntry)
         {
             CalendarEntry newEntry = new CalendarEntry();
-            if (outlookEntry.Subject.Contains("test-all-day"))
-                Debugger.Break();
             newEntry.IsAllDay = outlookEntry.AllDayEvent;
             newEntry.Body = outlookEntry.Body;
             newEntry.Subject = outlookEntry.Subject;
@@ -283,17 +281,26 @@ namespace TieCal
                 int i = 0;
                 foreach (AppointmentItem item in calendarFolder.Items)
                 {
-                    var calEntry = CreateCalendarEntry(item);
-                    if (calEntry.OutlookID != null && !(calEntry.Categories != null && calEntry.Categories.Contains("nosync")))
-                        calEntries.Add(calEntry);
-                    else
-                        NumberOfSkippedEntries++;
-                    i++;
-                    if (worker.CancellationPending)
+                    try
                     {
-                        e.Cancel = true;
-                        e.Result = calEntries;
-                        return;
+                        var calEntry = CreateCalendarEntry(item);
+                        if (calEntry.OutlookID != null && !(calEntry.Categories != null && calEntry.Categories.Contains("nosync")))
+                            calEntries.Add(calEntry);
+                        else
+                            NumberOfSkippedEntries++;
+                        i++;
+                        if (worker.CancellationPending)
+                        {
+                            e.Cancel = true;
+                            e.Result = calEntries;
+                            return;
+                        }
+                    }
+                    catch 
+                    {
+                        // By doing catch-all here, we at least let the user sync the entries TieCal understands..
+                        // TODO: proper error reporting
+                        NumberOfSkippedEntries++;
                     }
                     worker.ReportProgress(100 * i / calendarFolder.Items.Count);
 

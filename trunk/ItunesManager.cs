@@ -6,6 +6,7 @@ using iTunesLib;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Diagnostics;
 
 namespace TieCal
 {
@@ -54,8 +55,13 @@ namespace TieCal
             {
                 iTunesApp app;
                 BackgroundWorker worker = (BackgroundWorker)sender;
-                worker.ReportProgress(5);
+                worker.ReportProgress(15);
+                var start = Environment.TickCount;
                 app = new iTunesAppClass();
+                var time = Environment.TickCount - start;
+                bool wasRunning = false;
+                if (time < 500)
+                    wasRunning = true;
                 IITIPodSource iphone = null;
                 worker.ReportProgress(20);                
                 if (ProgramSettings.Instance.IphoneId.IsEmpty)
@@ -69,15 +75,21 @@ namespace TieCal
                 {
                     // no iphone connected
                     worker.ReportProgress(100);
+                    e.Result = new ApplicationException("Failed to find a connected iPhone");
+                    return;
                 }
                 object o = iphone;
                 ProgramSettings.Instance.IphoneId = new ItunesId(app.get_ITObjectPersistentIDHigh(ref o), app.get_ITObjectPersistentIDLow(ref o));
                 iphone.UpdateIPod();
+                // Just fake progress.. this is bound to be inaccurate though :-(
                 for (int i = 50; i < 100; i++)
                 {
                     worker.ReportProgress(i);
-                    Thread.Sleep(250);
+                    Thread.Sleep(100);
                 }
+                // TODO: Figure out how to know when sync is completed so that we can close itunes and update our GUI
+                //if (!wasRunning)
+                //    app.Quit();
             }
             catch (COMException ex)
             {
