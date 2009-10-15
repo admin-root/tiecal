@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     x:Class="TieCal.MainWindow"
     Title="TieCal Synchronizer" x:Name="window" 
-    xmlns:local="clr-namespace:TieCal" Width="700" Icon="Images\tiecal.ico" SizeToContent="Manual" Height="486" >
+    xmlns:local="clr-namespace:TieCal" Width="854" Icon="Images\tiecal.ico" SizeToContent="Manual" Height="508" >
 	<Window.Resources>
 		<local:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter"/>
 		<local:BoolToOppositeBoolConverter x:Key="BoolToOppositeBoolConverter"/>
@@ -100,7 +100,9 @@
                     	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
                     	<local:WorkerStep Title="Compare Calendars" x:Name="wsMergeEntries" Width="150" Height="110" WorkDone="wsMergeEntries_WorkDone" />
                     	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
-                    	<local:WorkerStep Title="Apply Changes" Width="150" Height="110" x:Name="wsApplyChanges" WorkDone="wsApplyChanges_WorkDone" />
+                    	<local:WorkerStep Title="Write to Outlook" Width="150" Height="110" x:Name="wsApplyChanges" WorkDone="wsApplyChanges_WorkDone" />
+                    	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" x:Name="imgSyncItunes"/>
+                    	<local:WorkerStep Title="Synchronize iPhone" Width="150" Height="110" x:Name="wsSyncItunes" WorkDone="wsSyncItunes_WorkDone" />
                     </StackPanel>
                     <local:InfoBox x:Name="progressInfoBox" MessageConfirmed="progressInfoBox_MessageConfirmed" InfoBoxType="Error" IconSize="24" Visibility="Collapsed" Grid.Row="2" />
                 </Grid>
@@ -144,6 +146,7 @@
 						</StackPanel>
 						<CheckBox Content="Confirm before merging changes" Margin="12,5,0,0" x:Name="chkConfirmMerge" ToolTip="Checking this box will show changes before merging them to Outlook." IsChecked="{Binding Path=ConfirmMerge, Mode=Default}"/>
                         <CheckBox Content="Include repeating events (BETA!)" Margin="12,5,0,0" x:Name="chkSyncRepeatingEvents" ToolTip="Checking this box will synchronize repeating events from Notes. This feature is currently in beta and may not fully work" IsChecked="{Binding Path=SyncRepeatingEvents, Mode=Default}"/>
+                        <CheckBox Content="Synchronize through iTunes" x:Name="chkSyncRepeatingEvents_Copy" ToolTip="Checking this box will automatically synchronize your Outlook calendar using iTunes. This requires that your iPhone and iTunes are configured to synchronize already." IsChecked="{Binding Path=SyncWithItunes, Mode=Default}" Width="765" Height="14.483" Margin="12,5,0,0"/>
 					</StackPanel>
                     
                 </Grid>
