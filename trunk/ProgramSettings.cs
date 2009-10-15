@@ -30,6 +30,7 @@ namespace TieCal
             ReminderMode = ReminderMode.NoReminder;
             ReminderMinutesBeforeStart = 15;
             ConfirmMerge = true;
+            SyncWithItunes = true;
         }
 
         private static ProgramSettings _instance;
@@ -89,6 +90,12 @@ namespace TieCal
         public bool RememberPassword { get; set; }
         public bool ConfirmMerge { get; set; }
         public bool SyncRepeatingEvents { get; set; }
+        public bool SyncWithItunes { get; set; }
+        /// <summary>
+        /// Gets or sets the id of the iphone (or ipod) to sync the calendar with.
+        /// </summary>
+        public ItunesId IphoneId { get; set; }
+        
         private ReminderMode _reminderMode;
         /// <summary>
         /// Gets or sets a value that specifies how reminders should be used for synchronized entries.

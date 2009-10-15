@@ -114,7 +114,7 @@ namespace TieCal
         private NotesReader _notesReader;
         private OutlookManager _outlookManager;
         private CalendarMerger _calendarMerger;
-        
+        private ItunesManager _itunesManager;
         public MainWindow()
         {
             InitializeComponent();
@@ -123,10 +123,12 @@ namespace TieCal
             _notesReader = new NotesReader();
             _outlookManager = new OutlookManager();
             _calendarMerger = new CalendarMerger();
+            _itunesManager = new ItunesManager();
             wsReadNotes.SetupWorker(_notesReader.FetchCalendarWorker);
             wsReadOutlook.SetupWorker(_outlookManager.FetchCalendarWorker);
             wsMergeEntries.SetupWorker(_calendarMerger.Worker);
             wsApplyChanges.SetupWorker(_outlookManager.MergeCalendarWorker);
+            wsSyncItunes.SetupWorker(_itunesManager.SynchronizeWorker);
             Grid.SetRow(welcomeBorder, 0);
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
@@ -165,6 +167,16 @@ namespace TieCal
 
         private void BeginFetchCalendarEntries()
         {
+            if (ProgramSettings.Instance.SyncWithItunes)
+            {
+                wsSyncItunes.Visibility = Visibility.Visible;
+                imgSyncItunes.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                wsSyncItunes.Visibility = Visibility.Collapsed;
+                imgSyncItunes.Visibility = Visibility.Collapsed;
+            }
             IsSynchronizing = true;           
             ResetWorkSteps();
             wsReadNotes.StartWork();
@@ -220,7 +232,7 @@ namespace TieCal
             switch (ws.WorkStage)
             {
                 case WorkStepStage.Cancelled:
-                    DisplaySynchronizationStatus("Operation cancelled", "The synchronization was cancelled. No changes was written to Outlook", InfoBoxType.Warning);
+                    DisplaySynchronizationStatus("Operation cancelled", "The synchronization was cancelled. No changes was written to Outlook nor the iPhone", InfoBoxType.Warning);
                     break;
                 case WorkStepStage.Failed:
                     DisplaySynchronizationStatus("Error Reading Calendars", ws.ErrorMessage, InfoBoxType.Error);
@@ -289,24 +301,50 @@ namespace TieCal
             if (wsApplyChanges.WorkStage == WorkStepStage.Completed)
             {
                 _calendarMerger.SaveMappings();
-                progressInfoBox.InfoBoxType = InfoBoxType.Info;
-                progressInfoBox.Title = "Synchronization completed";
-                var sb = new StringBuilder();
-                sb.AppendFormat("A total of {0} (of {1} available modifications) was successfully merged with the Outlook calendar.", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count);
-                sb.AppendLine();
-                if (_notesReader.NumberOfSkippedEntries > 0)
-                    sb.AppendFormat("{0} calendar entries from Lotus Notes was skipped.", _notesReader.NumberOfSkippedEntries);
-                if (_outlookManager.NumberOfSkippedEntries > 0)
-                    sb.AppendFormat("{0} calendar entries from Outlook was ignored.", _outlookManager.NumberOfSkippedEntries);
-                
-                sb.AppendLine();
-                sb.Append("You can now use iTunes to synchronize the Outlook calendar with your iPhone.");
-                progressInfoBox.Message = sb.ToString();
-                progressInfoBox.ShowAndAutoClose();
+                if (_calendarMerger.ModifiedEntries.Count > 0 && ProgramSettings.Instance.SyncWithItunes)
+                {
+                    wsSyncItunes.StartWork();
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendFormat("A total of {0} (of {1} available modifications) was successfully merged with the Outlook calendar.", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count);
+                    sb.AppendLine();
+                    if (_notesReader.NumberOfSkippedEntries > 0)
+                        sb.AppendFormat(" • {0} calendar entries from Lotus Notes was skipped." + Environment.NewLine, _notesReader.NumberOfSkippedEntries);
+                    if (_outlookManager.NumberOfSkippedEntries > 0)
+                        sb.AppendFormat(" • {0} calendar entries from Outlook was ignored.", _outlookManager.NumberOfSkippedEntries);
+
+                    sb.AppendLine();
+                    sb.Append("You can now use iTunes to synchronize the Outlook calendar with your iPhone.");
+
+                    DisplaySynchronizationStatus("Synchronization completed", sb.ToString(), InfoBoxType.Info);
+                }
             }
             else
                 // Cancelled or failed
                 DisplaySynchronizationStatus(wsApplyChanges);
+        }
+
+        private void wsSyncItunes_WorkDone(object sender, RoutedEventArgs e)
+        {
+            if (wsSyncItunes.WorkStage == WorkStepStage.Completed)
+            {
+                var sb = new StringBuilder();
+                sb.AppendFormat("A total of {0} (of {1} available modifications) was successfully merged with your Outlook calendar.", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count);
+                sb.AppendLine();
+                if (_notesReader.NumberOfSkippedEntries > 0)
+                    sb.AppendFormat(" • {0} calendar entries from Lotus Notes was skipped." + Environment.NewLine, _notesReader.NumberOfSkippedEntries);
+                if (_outlookManager.NumberOfSkippedEntries > 0)
+                    sb.AppendFormat(" • {0} calendar entries from Outlook was ignored.", _outlookManager.NumberOfSkippedEntries);
+
+                sb.AppendLine();
+                sb.Append("Check your iTunes window to make sure that synchronization has completed before you unplug your iPhone.");
+
+                DisplaySynchronizationStatus("Synchronization completed", sb.ToString(), InfoBoxType.Info);
+            }
+            else
+                DisplaySynchronizationStatus(wsSyncItunes);
         }
 
         private void progressInfoBox_MessageConfirmed(object sender, RoutedEventArgs e)
@@ -340,7 +378,6 @@ namespace TieCal
                 UpdateIsReadyState();
             }
         }
-
     }
 
     /// <summary>
