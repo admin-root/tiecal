@@ -291,9 +291,11 @@ namespace TieCal
             }
             if (Location != other.Location)
                 return false;
-            if (IsRepeating)
+            if (IsRepeating != other.IsRepeating)
+                return false;
+            if (IsRepeating && other.IsRepeating)
             {
-                if (RepeatPattern.EquivalentTo(other.RepeatPattern))
+                if (!RepeatPattern.EquivalentTo(other.RepeatPattern))
                     return false;
             }
             return true;
@@ -346,8 +348,13 @@ namespace TieCal
             }
             if (Location != other.Location)
                 diffs.Add("Location");
-            if (RepeatPattern != other.RepeatPattern)
-                diffs.Add("Repeat Pattern");
+            if (IsRepeating != other.IsRepeating)
+                diffs.Add("Repeating Event");
+            if (IsRepeating && other.IsRepeating)
+            {
+                if (!RepeatPattern.EquivalentTo(other.RepeatPattern))
+                    diffs.Add("Repeat Pattern");
+            }
             return diffs;
         }
 
