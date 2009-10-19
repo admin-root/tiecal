@@ -598,16 +598,16 @@ namespace TieCal
                 return false;
             if (IsDaily != other.IsDaily)
                 return false;
-            if (DayOfMonth != other.DayOfMonth)
+            if ((IsMonthly || IsYearly) && DayOfMonth != other.DayOfMonth)
                 return false;
-            if (DayOfWeek != other.DayOfWeek)
+            if (IsWeekly && DayOfWeek != other.DayOfWeek)
                 return false;
             if (NumRepeats != other.NumRepeats)
                 return false;
             if (Interval != other.Interval)
                 return false;
-            if (FirstOccurrence != other.FirstOccurrence)
-                return false;
+            //if (FirstOccurrence != other.FirstOccurrence)
+            //    return false;
             return true;
         }
     }
