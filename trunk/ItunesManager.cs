@@ -51,10 +51,10 @@ namespace TieCal
 
         void SynchronizeWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+            iTunesApp app = null;
+            BackgroundWorker worker = (BackgroundWorker)sender;
             try
             {
-                iTunesApp app;
-                BackgroundWorker worker = (BackgroundWorker)sender;
                 worker.ReportProgress(15);
                 var start = Environment.TickCount;
                 app = new iTunesAppClass();
@@ -63,10 +63,16 @@ namespace TieCal
                 if (time < 500)
                     wasRunning = true;
                 IITIPodSource iphone = null;
-                worker.ReportProgress(20);                
+                worker.ReportProgress(20);
+                for (int i = 15; i < 35; i++)
+    			{
+                    // Give iTunes some time to find the iphone, load GUI etc (yeah yeah, highly scientific and very reliable, but I didn't design the fucking itunes COM api!)
+                    worker.ReportProgress(i);
+                    Thread.Sleep(150);
+	    		}
                 if (ProgramSettings.Instance.IphoneId.IsEmpty)
                 {
-                    iphone = GetFirstIpod(app);                    
+                    iphone = GetFirstIpod(app);
                 }
                 else
                     iphone = GetIpodById(app, ProgramSettings.Instance.IphoneId);
@@ -74,26 +80,60 @@ namespace TieCal
                 if (iphone == null)
                 {
                     // no iphone connected
-                    worker.ReportProgress(100);
-                    e.Result = new ApplicationException("Failed to find a connected iPhone");
-                    return;
+                    throw new ApplicationException("Failed to find a connected iPhone. Make sure that it is properly connected to your computer and that you haven't ejected it earlier." + Environment.NewLine + "If the problem persists, try unplugging and then plugging in the phone again.");
                 }
                 object o = iphone;
                 ProgramSettings.Instance.IphoneId = new ItunesId(app.get_ITObjectPersistentIDHigh(ref o), app.get_ITObjectPersistentIDLow(ref o));
+                double originalSize = iphone.FreeSpace;
                 iphone.UpdateIPod();
-                // Just fake progress.. this is bound to be inaccurate though :-(
-                for (int i = 50; i < 100; i++)
+                // Wait for iphone data to actually change before starting to monitor it for stabilization
+                for (int i = 40; i < 70; i++)
+                {                    
+                    worker.ReportProgress(i);
+                    if (originalSize != iphone.FreeSpace)
+                    {
+                        // Ok, syncing has initiated, move on
+                        Debug.WriteLine("iPhone data has begun to change, aborting wait at " + i + "%");
+                        break;
+                    }
+                    Thread.Sleep(1000);
+                }
+                double lastSize = iphone.FreeSpace;
+                int sameSizeCounter = 0;
+                for (int i = 70; i < 96; i++)
                 {
                     worker.ReportProgress(i);
-                    Thread.Sleep(100);
+                    if (lastSize == iphone.FreeSpace)
+                        sameSizeCounter++;
+                    else
+                    {
+                        sameSizeCounter = 0;
+                        lastSize = iphone.FreeSpace;
+                    }
+                    if (sameSizeCounter == 10)
+                    {
+                        // Data hasn't changed in 5 seconds, consider sync complete
+                        Debug.WriteLine("iPhone data has been stable for " + sameSizeCounter + " iterations: consider sync done");
+                        break;
+                    }
+                    Thread.Sleep(1000);
                 }
                 // TODO: Figure out how to know when sync is completed so that we can close itunes and update our GUI
                 //if (!wasRunning)
+                //{
+                //    iphone.EjectIPod();
                 //    app.Quit();
+                //}
             }
             catch (COMException ex)
             {
-                e.Result = new ApplicationException("Failed to communicate with iTunes: " + ex.Message, ex);
+                throw new ApplicationException("There was a problem communicating with iTunes: " + ex.Message, ex);
+            }
+            finally
+            {
+                if (app != null)
+                    Marshal.FinalReleaseComObject(app);
+                worker.ReportProgress(100);
             }
         }       
 

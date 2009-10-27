@@ -139,15 +139,11 @@ namespace TieCal
             wsReadOutlook.Reset();
             wsMergeEntries.Reset();
             wsApplyChanges.Reset();
+            wsSyncItunes.Reset();
         }
 
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            //if (!String.IsNullOrEmpty(ProgramSettings.Instance.NotesPassword))
-            //    RefreshNotesDatabases();
-            //else if (String.IsNullOrEmpty(ProgramSettings.Instance.NotesDatabase))
-            //    // User must do setup before syncing
-            //    expSettings.IsExpanded = true;
             UpdateIsReadyState();
         }
 
@@ -235,7 +231,7 @@ namespace TieCal
                     DisplaySynchronizationStatus("Operation cancelled", "The synchronization was cancelled. No changes was written to Outlook nor the iPhone", InfoBoxType.Warning);
                     break;
                 case WorkStepStage.Failed:
-                    DisplaySynchronizationStatus("Error Reading Calendars", ws.ErrorMessage, InfoBoxType.Error);
+                    DisplaySynchronizationStatus("Error " + ws.Title, ws.ErrorMessage, InfoBoxType.Error);
                     break;
                 default:
                     return;

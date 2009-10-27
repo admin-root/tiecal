@@ -30,7 +30,9 @@ namespace TieCal
             ReminderMode = ReminderMode.NoReminder;
             ReminderMinutesBeforeStart = 15;
             ConfirmMerge = true;
-            SyncWithItunes = true;
+            // Default values for now, since these aren't tested that much
+            SyncWithItunes = false;
+            SyncRepeatingEvents = false;
         }
 
         private static ProgramSettings _instance;

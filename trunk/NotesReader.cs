@@ -14,6 +14,7 @@ using Domino;
 using System.Diagnostics;
 using System.ComponentModel;
 using System.Security;
+using System.Runtime.InteropServices;
 
 namespace TieCal
 {
@@ -324,9 +325,10 @@ namespace TieCal
             worker.ReportProgress(0);
             List<CalendarEntry> calEntries = new List<CalendarEntry>();
             NumberOfSkippedEntries = 0;
+            ISession session = null;
             try
             {
-                var session = CreateNotesSession();
+                session = CreateNotesSession();
                 var db = session.GetDatabase("", ProgramSettings.Instance.NotesDatabase, false);
                 
                 NotesView view = db.GetView("Calendar");
@@ -361,6 +363,8 @@ namespace TieCal
             }
             finally
             {
+                if (session != null)
+                    Marshal.FinalReleaseComObject(session);
                 worker.ReportProgress(100);
             }
         }
