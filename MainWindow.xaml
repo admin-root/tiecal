@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     x:Class="TieCal.MainWindow"
     Title="TieCal Synchronizer" x:Name="window" 
-    xmlns:local="clr-namespace:TieCal" Width="854" Icon="Images\tiecal.ico" SizeToContent="Manual" Height="508" >
+    xmlns:local="clr-namespace:TieCal" Width="900" Icon="Images\tiecal.ico" SizeToContent="Manual" Height="508" >
 	<Window.Resources>
 		<local:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter"/>
 		<local:BoolToOppositeBoolConverter x:Key="BoolToOppositeBoolConverter"/>
@@ -91,18 +91,18 @@
 						<RowDefinition Height="*"/>
                         <RowDefinition Height="Auto" />
 					</Grid.RowDefinitions>
-					<TextBlock Text="Synchronizing Calendars" FontSize="16" FontStyle="Normal" FontWeight="Bold" d:LayoutOverrides="Height" Margin="4,4,4,4"/>
+					<TextBlock Text="Synchronizing Calendars" FontSize="16" FontStyle="Normal" FontWeight="Bold" Margin="6"/>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1" Orientation="Horizontal" Margin="4,4,4,4">
                         <StackPanel>
-                    		<local:WorkerStep Title="Read Notes Calendar" x:Name="wsReadNotes" Width="150" Height="110" Margin="0,0,0,10" WorkDone="wsReadCalendar_WorkDone" />
-                    		<local:WorkerStep Title="Read Outlook Calendar" x:Name="wsReadOutlook" Width="150" Height="110" WorkDone="wsReadCalendar_WorkDone" />
+                    		<local:WorkerStep Title="Reading Notes Calendar" x:Name="wsReadNotes" Width="165" Height="110" Margin="0,0,0,10" WorkDone="wsReadCalendar_WorkDone" />
+                    		<local:WorkerStep Title="Reading Outlook Calendar" x:Name="wsReadOutlook" Width="165" Height="110" WorkDone="wsReadCalendar_WorkDone" />
                     	</StackPanel>
                     	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
-                    	<local:WorkerStep Title="Compare Calendars" x:Name="wsMergeEntries" Width="150" Height="110" WorkDone="wsMergeEntries_WorkDone" />
+                    	<local:WorkerStep Title="Comparing Calendars" x:Name="wsMergeEntries" Width="165" Height="110" WorkDone="wsMergeEntries_WorkDone" />
                     	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" Margin="8,8,8,8"/>
-                    	<local:WorkerStep Title="Write to Outlook" Width="150" Height="110" x:Name="wsApplyChanges" WorkDone="wsApplyChanges_WorkDone" />
-                    	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" x:Name="imgSyncItunes"/>
-                    	<local:WorkerStep Title="Synchronize iPhone" Width="150" Height="110" x:Name="wsSyncItunes" WorkDone="wsSyncItunes_WorkDone" />
+                    	<local:WorkerStep Title="Writing to Outlook" Width="165" Height="110" x:Name="wsApplyChanges" WorkDone="wsApplyChanges_WorkDone" />
+                    	<Image Width="48" Height="48" Source="Images\agt_forward-64.png" x:Name="imgSyncItunes" Margin="8,8,8,8"/>
+                    	<local:WorkerStep Title="Synchronizing iPhone" Width="165" Height="110" x:Name="wsSyncItunes" WorkDone="wsSyncItunes_WorkDone" />
                     </StackPanel>
                     <local:InfoBox x:Name="progressInfoBox" MessageConfirmed="progressInfoBox_MessageConfirmed" InfoBoxType="Error" IconSize="24" Visibility="Collapsed" Grid.Row="2" />
                 </Grid>

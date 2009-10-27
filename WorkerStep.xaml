@@ -28,25 +28,26 @@
 		</LinearGradientBrush>
 	</UserControl.Resources>
 
-    <Border BorderThickness="1,1,1,1" x:Name="bd" CornerRadius="3,3,3,3" 
-            BorderBrush="{Binding Path=BorderBrush, ElementName=UserControl}" 
-            Background="{Binding Path=BorderBackground, ElementName=UserControl}">
-		<Grid x:Name="LayoutRoot">
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="*"/>
-				<RowDefinition Height="Auto"/>
-			</Grid.RowDefinitions>
-			<TextBlock Text="{Binding Path=Title, ElementName=UserControl, Mode=Default}" TextWrapping="Wrap" FontWeight="Bold" d:LayoutOverrides="Height" Margin="3,2,0,2"/>
-			<ProgressBar Grid.Row="1" VerticalAlignment="Center" Height="16" Margin="14,0,14,0" x:Name="pbar"/>
-            <Button Padding="4,0,4,0" Content="Abort" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Bottom" 
-                    Margin="4" Grid.Row="2" x:Name="btnAbort" Click="btnAbort_Click" 
-                    Visibility="{Binding Path=IsAbortable, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=UserControl}" 
-                    IsEnabled="{Binding Path=WorkStage, Converter={StaticResource WorkStepStageToEnabledConverter}, ElementName=UserControl}"/>
-            <Image HorizontalAlignment="Right" Margin="0,0,4,4" Width="48" Grid.Row="2" Source="{Binding Path=StatusImage, ElementName=UserControl}" x:Name="imgStatus" VerticalAlignment="Bottom"/>
-        </Grid>
-	</Border>
-    <UserControl.Style>
+    <Grid x:Name="LayoutRoot">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+        <Rectangle Grid.RowSpan="3" RadiusX="4" RadiusY="4" Stroke="{Binding Path=BorderBrush, ElementName=UserControl}" Fill="{Binding Path=BorderBackground, ElementName=UserControl}" StrokeThickness="1">
+            <Rectangle.Effect>
+                <DropShadowEffect BlurRadius="10" Opacity="0.7" ShadowDepth="0" />
+            </Rectangle.Effect>
+        </Rectangle>
+		<TextBlock Text="{Binding Path=Title, ElementName=UserControl, Mode=Default}" TextWrapping="Wrap" FontWeight="Bold" d:LayoutOverrides="Height" Margin="4,4,0,4"/>
+		<ProgressBar Grid.Row="1" VerticalAlignment="Center" Height="16" Margin="16,0,16,0" x:Name="pbar"/>
+        <Button Padding="6,0,6,0" Content="Abort" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Bottom" 
+                Margin="4" Grid.Row="2" x:Name="btnAbort" Click="btnAbort_Click" 
+                Visibility="{Binding Path=IsAbortable, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=UserControl}" 
+                IsEnabled="{Binding Path=WorkStage, Converter={StaticResource WorkStepStageToEnabledConverter}, ElementName=UserControl}"/>
+        <Image HorizontalAlignment="Right" Margin="0,0,6,6" Width="48" Grid.Row="2" Source="{Binding Path=StatusImage, ElementName=UserControl}" x:Name="imgStatus" VerticalAlignment="Bottom"/>
+    </Grid>
+	<UserControl.Style>
         <Style TargetType="{x:Type local:WorkerStep}">
             <Setter Property="StatusImage" Value="Images/Clock.png" />
             <Setter Property="BorderBrush" Value="{StaticResource waitingBorderBrush}" />
