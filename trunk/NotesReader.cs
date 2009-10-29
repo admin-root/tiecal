@@ -208,7 +208,7 @@ namespace TieCal
                 {
                     newEntry.SetRepeatPattern(occurrences);
                 }
-                catch
+                catch (ArgumentException)
                 {
                     return null;
                 }
@@ -282,9 +282,11 @@ namespace TieCal
         /// <returns></returns>
         private static string GetNameFromNotesName(string notesName)
         {
-            int start = notesName.IndexOf("CN=") + "CN=".Length;
+            int start = notesName.IndexOf("CN=");
             if (start == -1)
                 return notesName;
+            else
+                start += "CN=".Length;
             int end = notesName.IndexOf("/", start);
             if (end != -1)
                 return notesName.Substring(start, end - start);
