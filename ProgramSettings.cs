@@ -45,6 +45,16 @@ namespace TieCal
                 return _instance; 
             }
         }
+        public static string SaveFolder
+        {
+            get
+            {
+                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TieCal");
+                Directory.CreateDirectory(folder);
+                return folder;
+            }
+
+        }
         /// <summary>
         /// Gets the filename where settings are saved.
         /// </summary>
@@ -52,9 +62,7 @@ namespace TieCal
         {
             get
             {
-                string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TieCal");
-                Directory.CreateDirectory(folder);
-                return Path.Combine(folder, "ProgramSettings.txt");
+                return Path.Combine(SaveFolder, "ProgramSettings.txt");
             }
         }
 

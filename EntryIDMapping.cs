@@ -28,6 +28,7 @@ namespace TieCal
         /// </summary>
         public EntryIDMapping()
         {
+            // TODO: Take folder from ProgramSettings
             string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TieCal");
             Directory.CreateDirectory(folder);
             Filename = Path.Combine(folder, "IDMapping.txt");
