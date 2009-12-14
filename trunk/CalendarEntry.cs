@@ -70,7 +70,7 @@ namespace TieCal
         /// <param name="timePart">The time part.</param>
         public void UpdateStartTime(TimeSpan timePart)
         {
-            StartTime = new DateTime(StartTime.Year, StartTime.Month, StartTime.Day, timePart.Hours, timePart.Minutes, timePart.Seconds);            
+            StartTime = new DateTime(StartTime.Year, StartTime.Month, StartTime.Day, timePart.Hours, timePart.Minutes, timePart.Seconds);
         }
 
         /// <summary>

@@ -217,10 +217,14 @@ namespace TieCal
 
         private void DisplaySynchronizationStatus(string title, string message, InfoBoxType type)
         {
+            DisplaySynchronizationStatus(title, new Inline[] { new Run(message) }, type);
+        }
+
+        private void DisplaySynchronizationStatus(string title, IEnumerable<Inline> messageInlines, InfoBoxType type)
+        {
             progressInfoBox.Title = title;
-            progressInfoBox.Message = message;
             progressInfoBox.InfoBoxType = type;
-            progressInfoBox.ShowAndAutoClose();
+            progressInfoBox.ShowAndAutoClose(messageInlines);
         }
 
         private void DisplaySynchronizationStatus(WorkerStep ws)
@@ -292,6 +296,35 @@ namespace TieCal
             }
         }
 
+        /// <summary>
+        /// Creates the message that is shown after sync has completed. The message is suitable as insertion to a TextBlock and contains
+        /// formatted text.
+        /// </summary>
+        private ICollection<Inline> CreateStatusMessage()
+        {
+            // Ouch, the pain!!! Would be nice if there was a XAML.Parse to do this in markup from code...
+            List<Inline> message = new List<Inline>();
+            message.Add(new Run(String.Format("A total of {0} (of {1} available modifications) was successfully merged with the Outlook calendar.", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count)));
+            message.Add(new LineBreak());
+            if (_notesReader.NumberOfSkippedEntries > 0)
+            {
+                message.Add(new Run(String.Format(" • {0} calendar entries from Lotus Notes was skipped. ", _notesReader.NumberOfSkippedEntries)));
+                var link = new Hyperlink(new Run("why?"));
+                link.Click += delegate { ShowSkippedEntries(_notesReader.SkippedEntries); };
+                message.Add(link);
+                message.Add(new LineBreak());
+            }
+            if (_outlookManager.NumberOfSkippedEntries > 0)
+            {
+                message.Add(new Run(String.Format(" • {0} calendar entries from Outlook was ignored.", _outlookManager.NumberOfSkippedEntries)));
+                var link = new Hyperlink(new Run("why?"));
+                link.Click += delegate { ShowSkippedEntries(_outlookManager.SkippedEntries); };
+                message.Add(link);
+                message.Add(new LineBreak());
+            }
+            return message;
+        }
+
         private void wsApplyChanges_WorkDone(object sender, RoutedEventArgs e)
         {
             if (wsApplyChanges.WorkStage == WorkStepStage.Completed)
@@ -303,18 +336,9 @@ namespace TieCal
                 }
                 else
                 {
-                    var sb = new StringBuilder();
-                    sb.AppendFormat("A total of {0} (of {1} available modifications) was successfully merged with the Outlook calendar.", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count);
-                    sb.AppendLine();
-                    if (_notesReader.NumberOfSkippedEntries > 0)
-                        sb.AppendFormat(" • {0} calendar entries from Lotus Notes was skipped." + Environment.NewLine, _notesReader.NumberOfSkippedEntries);
-                    if (_outlookManager.NumberOfSkippedEntries > 0)
-                        sb.AppendFormat(" • {0} calendar entries from Outlook was ignored.", _outlookManager.NumberOfSkippedEntries);
-
-                    sb.AppendLine();
-                    sb.Append("You can now use iTunes to synchronize the Outlook calendar with your iPhone.");
-
-                    DisplaySynchronizationStatus("Synchronization completed", sb.ToString(), InfoBoxType.Info);
+                    var message = CreateStatusMessage();
+                    message.Add(new Run("You can now use iTunes to synchronize the Outlook calendar with your iPhone."));
+                    DisplaySynchronizationStatus("Synchronization completed", message, InfoBoxType.Info);
                 }
             }
             else
@@ -326,21 +350,20 @@ namespace TieCal
         {
             if (wsSyncItunes.WorkStage == WorkStepStage.Completed)
             {
-                var sb = new StringBuilder();
-                sb.AppendFormat("A total of {0} (of {1} available modifications) was successfully merged with your Outlook calendar.", _outlookManager.NumberOfMergedEntries, _calendarMerger.ModifiedEntries.Count);
-                sb.AppendLine();
-                if (_notesReader.NumberOfSkippedEntries > 0)
-                    sb.AppendFormat(" • {0} calendar entries from Lotus Notes was skipped." + Environment.NewLine, _notesReader.NumberOfSkippedEntries);
-                if (_outlookManager.NumberOfSkippedEntries > 0)
-                    sb.AppendFormat(" • {0} calendar entries from Outlook was ignored.", _outlookManager.NumberOfSkippedEntries);
+                var message = CreateStatusMessage();
+                
+                message.Add(new Run("Check your iTunes window to make sure that synchronization has completed before you unplug your iPhone."));
 
-                sb.AppendLine();
-                sb.Append("Check your iTunes window to make sure that synchronization has completed before you unplug your iPhone.");
-
-                DisplaySynchronizationStatus("Synchronization completed", sb.ToString(), InfoBoxType.Info);
+                DisplaySynchronizationStatus("Synchronization completed", message, InfoBoxType.Info);
             }
             else
                 DisplaySynchronizationStatus(wsSyncItunes);
+        }
+
+        private void ShowSkippedEntries(ICollection<SkippedEntry> skippedEntries)
+        {
+            var dlg = new SkippedEntriesWindow();
+            dlg.Show(skippedEntries);
         }
 
         private void progressInfoBox_MessageConfirmed(object sender, RoutedEventArgs e)

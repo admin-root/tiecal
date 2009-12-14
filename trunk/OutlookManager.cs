@@ -272,7 +272,7 @@ namespace TieCal
         void FetchCalendarWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = (BackgroundWorker)sender;
-            NumberOfSkippedEntries = 0;
+            SkippedEntries = new List<SkippedEntry>();
             worker.ReportProgress(0);
             List<CalendarEntry> calEntries = new List<CalendarEntry>();
             try
@@ -284,10 +284,12 @@ namespace TieCal
                     try
                     {
                         var calEntry = CreateCalendarEntry(item);
-                        if (calEntry.OutlookID != null && !(calEntry.Categories != null && calEntry.Categories.Contains("nosync")))
-                            calEntries.Add(calEntry);
+                        if (calEntry.OutlookID == null)
+                            SkippedEntries.Add(new SkippedEntry(calEntry, "No valid ID found on calendar entry"));
+                        else if (calEntry.Categories != null && calEntry.Categories.Contains("nosync"))
+                            SkippedEntries.Add(new SkippedEntry(calEntry, "Calendar entry was in the 'nosync' category"));
                         else
-                            NumberOfSkippedEntries++;
+                            calEntries.Add(calEntry);
                         i++;
                         if (worker.CancellationPending)
                         {
@@ -296,11 +298,12 @@ namespace TieCal
                             return;
                         }
                     }
-                    catch 
+                    catch (System.Exception ex)
                     {
                         // By doing catch-all here, we at least let the user sync the entries TieCal understands..
                         // TODO: proper error reporting
-                        NumberOfSkippedEntries++;
+                        SkippedEntries.Add(new SkippedEntry(new CalendarEntry() { Subject = "(no subject)" }, "Exception while reading outlook: " + ex.Message));
+
                     }
                     worker.ReportProgress(100 * i / calendarFolder.Items.Count);
 
@@ -328,8 +331,21 @@ namespace TieCal
         /// Gets the number of calendar entries that was skipped while reading the calendar.
         /// </summary>
         /// <value>The number of skipped entries.</value>
-        public int NumberOfSkippedEntries { get; private set; }
+        public int NumberOfSkippedEntries
+        {
+            get
+            {
+                if (SkippedEntries == null)
+                    return 0;
+                return SkippedEntries.Count;
+            }
+        }
 
+        /// <summary>
+        /// Gets the collection of calendar entries that were skipped.
+        /// </summary>
+        /// <value>The skipped entries.</value>
+        public ICollection<SkippedEntry> SkippedEntries { get; private set; }
         /// <summary>
         /// Gets the Microsoft Outlook version.
         /// </summary>
