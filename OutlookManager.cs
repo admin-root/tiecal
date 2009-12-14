@@ -21,11 +21,12 @@ namespace TieCal
     /// </summary>
     public class OutlookManager : ICalendarReader
     {
+        /// <summary>
+        /// Do not use directly, use the <see cref="OutlookApp"/> property instead which is guaranteed to be non-null.
+        /// </summary>
         Application outlookApp;
         public OutlookManager()
         {
-            outlookApp = new ApplicationClass();
-            CalendarAppVersion = outlookApp.Version;
             FetchCalendarWorker = new BackgroundWorker();
             FetchCalendarWorker.WorkerReportsProgress = true;
             FetchCalendarWorker.WorkerSupportsCancellation = true;
@@ -36,9 +37,18 @@ namespace TieCal
             MergeCalendarWorker.DoWork += new DoWorkEventHandler(MergeCalendarWorker_DoWork);
         }
 
+        private Application OutlookApp
+        {
+            get
+            {
+                if (outlookApp == null)
+                    outlookApp = new ApplicationClass();
+                return outlookApp;
+            }
+        }
         private MAPIFolder GetCalendarFolder()
         {
-            NameSpace outlookNS = outlookApp.GetNamespace("MAPI");
+            NameSpace outlookNS = OutlookApp.GetNamespace("MAPI");
             return outlookNS.GetDefaultFolder(OlDefaultFolders.olFolderCalendar);            
         }
 
@@ -166,8 +176,8 @@ namespace TieCal
         /// <param name="entry">The calendar entry to read updated information from.</param>
         private void UpdateEntry(AppointmentItem olItem, CalendarEntry entry)
         {
-            olItem.StartTimeZone = outlookApp.TimeZones[entry.StartTimeZone.Id];
-            olItem.EndTimeZone = outlookApp.TimeZones[entry.EndTimeZone.Id];
+            olItem.StartTimeZone = OutlookApp.TimeZones[entry.StartTimeZone.Id];
+            olItem.EndTimeZone = OutlookApp.TimeZones[entry.EndTimeZone.Id];
             olItem.Subject = entry.Subject;
             olItem.Body = entry.Body;
             olItem.Location = entry.Location;
@@ -350,7 +360,7 @@ namespace TieCal
         /// Gets the Microsoft Outlook version.
         /// </summary>
         /// <value>The version reported from the calendar application.</value>
-        public string CalendarAppVersion { get; private set; }
+        public string CalendarAppVersion { get { return OutlookApp.Version; } }
         #endregion
     }
 }
