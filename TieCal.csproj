@@ -74,6 +74,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="SkippedEntriesWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="WorkerStep.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -89,6 +93,9 @@
     </Compile>
     <Compile Include="SetupRemindersDialog.xaml.cs">
       <DependentUpon>SetupRemindersDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SkippedEntriesWindow.xaml.cs">
+      <DependentUpon>SkippedEntriesWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkerStep.xaml.cs">
       <DependentUpon>WorkerStep.xaml</DependentUpon>

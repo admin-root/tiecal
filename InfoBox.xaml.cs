@@ -16,6 +16,8 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using System.ComponentModel;
+using System.Windows.Documents;
+using System.Collections.Generic;
 
 namespace TieCal
 {
@@ -137,6 +139,13 @@ namespace TieCal
             this.Visibility = Visibility.Visible;
         }
 
+        public void ShowAndAutoClose(IEnumerable<Inline> messageInlines)
+        {
+            txtMessage.Text = null;
+            txtMessage.Inlines.Clear();
+            txtMessage.Inlines.AddRange(messageInlines);
+            ShowAndAutoClose();
+        }
         private void btnOk_Click(object sender, RoutedEventArgs e)
         {
             if (AutoClose)

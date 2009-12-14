@@ -51,7 +51,130 @@ namespace TieCal
             
             return databases;
         }
+        private class NotesEntryItems
+        {
+            private Dictionary<string, string> stringItems;
+            private Dictionary<string, DateTime> dateItems;
+            public TimeSpan StartTimeZoneOffset { get; private set; }
+            public TimeSpan EndTimeZoneOffset { get; private set; }
+            public TimeSpan LocalTimeZoneOffset { get; private set; }
+            
+            public List<DateTime> Occurrences { get; private set; }
+            public NotesEntryItems(NotesViewEntry notesEntry)
+            {
+                stringItems = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                dateItems = new Dictionary<string, DateTime>(StringComparer.InvariantCultureIgnoreCase);
+                Occurrences = new List<DateTime>();
+                StartTimeZoneOffset = TimeSpan.FromTicks(0);
+                EndTimeZoneOffset = TimeSpan.FromTicks(0);
+                LocalTimeZoneOffset = TimeSpan.FromTicks(0);
+                var items = (object[])notesEntry.Document.Items;
 
+                for (int i = 0; i < items.Length; i++)
+                {
+                    NotesItem item = (NotesItem)items[i];
+                    if (stringItems.ContainsKey(item.Name))
+                        // Ignore duplicate items ('Received' is for instance specified multiple times)
+                        continue;
+                    if (item.Text != null)
+                        stringItems.Add(item.Name, item.Text);
+                    if (item.DateTimeValue != null)
+                    {
+                        dateItems.Add(item.Name, (DateTime)item.DateTimeValue.LSGMTTime);
+                        if (item.Name == "StartTime" || item.Name == "EndTime")
+                            // We need the local time for some all-day events in case they don't have time-zone info
+                            dateItems.Add(item.Name + "-local", (DateTime)item.DateTimeValue.LSLocalTime);
+                    }
+                    if (item.Name == "CalendarDateTime")
+                    {
+                        // This is a list of all occurrences (including original one)
+                        object times = item.GetValueDateTimeArray();
+                        foreach (object time in (object[])times)
+                        {
+                            var nTime = time as NotesDateTime;
+                            Occurrences.Add((DateTime)nTime.LSGMTTime);
+                        }
+                    }
+                    else if (item.Name == "StartTimeZone")
+                    {
+                        StartTimeZoneOffset = GetTimeZoneDiff(item);
+                    }
+                    else if (item.Name == "EndTimeZone")
+                    {
+                        EndTimeZoneOffset = GetTimeZoneDiff(item);
+                    }
+                    else if (item.Name == "LocalTimeZone")
+                    {
+                        LocalTimeZoneOffset = GetTimeZoneDiff(item);
+                    }
+                }
+
+                if (dateItems.ContainsKey("StartDateTime"))
+                    StartTime = dateItems["StartDateTime"];
+                else if (dateItems.ContainsKey("StartDate"))
+                {
+                    StartTime = dateItems["StartDate"];
+                    if (dateItems.ContainsKey("StartTime"))
+                    {
+                        var timePart = dateItems["StartTime"].TimeOfDay;
+                        StartTime = new DateTime(StartTime.Year, StartTime.Month, StartTime.Day, timePart.Hours, timePart.Minutes, timePart.Seconds);
+                    }
+                    StartTime = StartTime.Add(StartTimeZoneOffset);
+                }
+                else if (dateItems.ContainsKey("StartTime"))
+                {
+                    Debugger.Break(); // This is probably an exception
+                    StartTime = dateItems["StartTime"].Add(StartTimeZoneOffset);
+                    Debug.Assert(StartTime.Date != default(DateTime).Date);
+                }
+
+                if (dateItems.ContainsKey("EndDateTime"))
+                    EndTime = dateItems["EndDateTime"];
+                else if (dateItems.ContainsKey("EndDate"))
+                {
+                    EndTime = dateItems["EndDate"];
+                    if (dateItems.ContainsKey("EndTime"))
+                    {
+                        var timePart = dateItems["EndTime"].TimeOfDay;
+                        EndTime = EndTime = new DateTime(EndTime.Year, EndTime.Month, EndTime.Day,
+                            timePart.Hours, timePart.Minutes, timePart.Seconds);
+                    }
+                    EndTime = EndTime.Add(EndTimeZoneOffset);
+                }
+                else if (dateItems.ContainsKey("EndTime"))
+                {
+                    Debugger.Break();
+                    EndTime = dateItems["EndTime"].Add(EndTimeZoneOffset);
+                    Debug.Assert(EndTime.Date != default(DateTime).Date);
+                }
+            }
+
+            public DateTime StartTime { get; set; }
+            public DateTime EndTime { get; set; }
+            public bool HasDateItem(string key)
+            {
+                return dateItems.ContainsKey(key);
+            }
+
+            public bool HasStringItem(string key)
+            {
+                return stringItems.ContainsKey(key);
+            }
+
+            public DateTime GetDateItemOrDefault(string key)
+            {
+                if (!dateItems.ContainsKey(key))
+                    return default(DateTime);
+                return dateItems[key];
+            }
+
+            public string GetStringItemOrDefault(string key)
+            {
+                if (!stringItems.ContainsKey(key))
+                    return null;
+                return stringItems[key];
+            }
+        }
         /// <summary>
         /// Creates the calendar entry from the provided Lotus Notes calendar entry.
         /// </summary>
@@ -60,122 +183,52 @@ namespace TieCal
         /// More details about Notes API: http://www-01.ibm.com/support/docview.wss?rs=463&context=SSKTMJ&context=SSKTWP&dc=DB520&dc=D600&dc=DB530&dc=D700&dc=DB500&dc=DB540&dc=DB510&dc=DB550&q1=1229486&uid=swg21229486&loc=en_US&cs=utf-8&lang=en
         /// </remarks>
         /// <returns></returns>
-        private static CalendarEntry CreateCalendarEntry(NotesViewEntry notesEntry)
+        private static CalendarEntry CreateCalendarEntry(NotesViewEntry notesEntry, out SkippedEntry skippedEntry)
         {
-            TimeSpan startTZOffset  = TimeSpan.FromTicks(0);
-            TimeSpan endTZOffset    = TimeSpan.FromTicks(0);
-            TimeSpan localTZOffset  = TimeSpan.FromTicks(0);
             CalendarEntry newEntry = new CalendarEntry();
-            List<DateTime> occurrences = new List<DateTime>();
             newEntry.NotesID = notesEntry.UniversalID;
             NotesDocument doc = notesEntry.Document;
             Debug.Assert(doc.UniversalID == notesEntry.UniversalID);
-            Dictionary<string, string> stringItems = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            Dictionary<string, DateTime> dateItems = new Dictionary<string, DateTime>(StringComparer.InvariantCultureIgnoreCase);
-            var items = (object[])notesEntry.Document.Items;
-            
-            for (int i = 0; i < items.Length; i++)
-            {
-                NotesItem item = (NotesItem)items[i];
-                if (stringItems.ContainsKey(item.Name))
-                    // Ignore duplicate items ('Received' is for instance specified multiple times)
-                    continue;
-                if (item.Text != null)
-                    stringItems.Add(item.Name, item.Text);
-                if (item.DateTimeValue != null)
-                {
-                    dateItems.Add(item.Name, (DateTime) item.DateTimeValue.LSGMTTime);
-                    if (item.Name == "StartTime" || item.Name == "EndTime")
-                        // We need the local time for some all-day events in case they don't have time-zone info
-                        dateItems.Add(item.Name + "-local", (DateTime)item.DateTimeValue.LSLocalTime);
-                }
-                if (item.Name == "CalendarDateTime")
-                {
-                    // This is a list of all occurrences (including original one)
-                    object times = item.GetValueDateTimeArray();
-                    foreach (object time in (object[])times)
-                    {
-                        var nTime = time as NotesDateTime;
-                        occurrences.Add((DateTime)nTime.LSGMTTime);
-                    }
-                }
-                else if (item.Name == "StartTimeZone")
-                {
-                    startTZOffset = GetTimeZoneDiff(item);
-                }
-                else if (item.Name == "EndTimeZone")
-                {
-                    endTZOffset = GetTimeZoneDiff(item);
-                }
-                else if (item.Name == "LocalTimeZone")
-                {
-                    localTZOffset = GetTimeZoneDiff(item);
-                }
-            }
-            // sanity check
-            if (stringItems.ContainsKey("TaskType") && !stringItems.ContainsKey("AppointmentType"))
-                // It's probably a TODO or Followup, ignore it
-                return null;
-            if (stringItems.ContainsKey("Body"))
-                newEntry.Body = stringItems["Body"];
-
-            if (stringItems.ContainsKey("Subject"))
-                newEntry.Subject = stringItems["Subject"];
-            else
+            var items = new NotesEntryItems(notesEntry);
+            skippedEntry = null;
+            newEntry.Body = items.GetStringItemOrDefault("Body");
+            newEntry.Subject = items.GetStringItemOrDefault("Subject");
+            if (String.IsNullOrEmpty(newEntry.Subject))
                 newEntry.Subject = "(no subject)";
-            if (stringItems.ContainsKey("Location"))
-                newEntry.Location = stringItems["Location"];
-            if (stringItems.ContainsKey("Room"))
+
+            if (items.HasStringItem("Location"))
+                newEntry.Location = GetNameFromNotesName(items.GetStringItemOrDefault("Location"));
+            if (items.HasStringItem("Room"))
             {
+                var room = GetNameFromNotesName(items.GetStringItemOrDefault("Room"));
                 if (!String.IsNullOrEmpty(newEntry.Location))
-                    newEntry.Location = String.Format("{0}, {1}", newEntry.Location, stringItems["Room"]);
+                    newEntry.Location = String.Format("{0}, {1}", newEntry.Location, room);
                 else
-                    newEntry.Location = stringItems["Room"];
+                    newEntry.Location = room;
             }
-            if (stringItems.ContainsKey("SendTo"))
-                newEntry.Participants.AddRange(GetRecipentList(stringItems["SendTo"]));
-            if (stringItems.ContainsKey("CopyTo"))
-                newEntry.OptionalParticipants.AddRange(GetRecipentList(stringItems["CopyTo"]));
-            if (stringItems.ContainsKey("From"))
-                newEntry.From = stringItems["From"];
-
-            if (dateItems.ContainsKey("StartDateTime"))
-                newEntry.StartTime = dateItems["StartDateTime"];
-            else if (dateItems.ContainsKey("StartDate"))
-            {
-                newEntry.StartTime = dateItems["StartDate"];
-                if (dateItems.ContainsKey("StartTime"))
-                    newEntry.UpdateStartTime(dateItems["StartTime"].TimeOfDay);
-                newEntry.StartTime = newEntry.StartTime.Add(startTZOffset);
-            }
-            else if (dateItems.ContainsKey("StartTime"))
-            {
-                Debugger.Break(); // This is probably an exception
-                newEntry.StartTime = dateItems["StartTime"].Add(startTZOffset);
-                Debug.Assert(newEntry.StartTime.Date != default(DateTime).Date);
-            }
-
-            if (dateItems.ContainsKey("EndDateTime"))
-                newEntry.EndTime = dateItems["EndDateTime"];
-            else if (dateItems.ContainsKey("EndDate"))
-            {                
-                newEntry.EndTime = dateItems["EndDate"];
-                if (dateItems.ContainsKey("EndTime"))
-                    newEntry.UpdateEndTime(dateItems["EndTime"].TimeOfDay);
-                
-                newEntry.EndTime = newEntry.EndTime.Add(endTZOffset);
-            }
-            else if (dateItems.ContainsKey("EndTime"))
-            {
-                Debugger.Break();
-                newEntry.EndTime = dateItems["EndTime"].Add(endTZOffset);
-                Debug.Assert(newEntry.EndTime.Date != default(DateTime).Date);
-            }
-            // Notes stores timezone offset in the inverted form (e.g. CET would be -1, instead of +1)
-            newEntry.SetEndTimeZoneFromOffset(TimeSpan.FromTicks(endTZOffset.Ticks * -1));
-            newEntry.SetStartTimeZoneFromOffset(TimeSpan.FromTicks(startTZOffset.Ticks * -1));
+            var people = items.GetStringItemOrDefault("SendTo");
+            if (people != null)
+                newEntry.Participants.AddRange(GetRecipentList(people));
+            people = items.GetStringItemOrDefault("CopyTo");
+            if (people != null)
+                newEntry.OptionalParticipants.AddRange(GetRecipentList(people));
+            newEntry.From = items.GetStringItemOrDefault("From");
+            newEntry.StartTime = items.StartTime;
+            newEntry.EndTime = items.EndTime;
             
-            if (stringItems["AppointmentType"] == "2")
+            // Notes stores timezone offset in the inverted form (e.g. CET would be -1, instead of +1)
+            newEntry.SetEndTimeZoneFromOffset(TimeSpan.FromTicks(items.EndTimeZoneOffset.Ticks * -1));
+            newEntry.SetStartTimeZoneFromOffset(TimeSpan.FromTicks(items.StartTimeZoneOffset.Ticks * -1));
+            var appointmentType = items.GetStringItemOrDefault("AppointmentType");
+            
+            // Sanity check
+            if (items.HasStringItem("TaskType") && appointmentType == null)
+            {
+                // It's probably a TODO or Followup, ignore it
+                skippedEntry = new SkippedEntry(newEntry, "Not a valid calendar entry. Could be TODO or Followup item");
+                return null;
+            }
+            if (appointmentType == "2")
             {
                 /* All Day Event */
                 newEntry.IsAllDay = true;
@@ -185,11 +238,11 @@ namespace TieCal
                 newEntry.StartTime = newEntry.StartTime.Date;
                 newEntry.EndTime = newEntry.EndTime.Date.AddDays(1);
             }
-            else if (stringItems["AppointmentType"] == "1")
+            else if (appointmentType == "1")
             {
                 // Anniversary
-                newEntry.StartTime = dateItems["StartTime-local"];
-                newEntry.EndTime = dateItems["EndTime-local"];
+                newEntry.StartTime = items.GetDateItemOrDefault("StartTime-local");
+                newEntry.EndTime = items.GetDateItemOrDefault("EndTime-local");
                 newEntry.StartTimeZone = TimeZoneInfo.Local;
                 newEntry.EndTimeZone = TimeZoneInfo.Local;
                 // Reset the time to zero to reflect that it is all day event
@@ -197,29 +250,33 @@ namespace TieCal
                 newEntry.EndTime = newEntry.EndTime.Date.AddDays(1);
                 newEntry.IsAllDay = true;
             }
-            if (!stringItems.ContainsKey("OrgRepeat") && occurrences.Count > 1)
+            if (!items.HasStringItem("OrgRepeat") && items.Occurrences.Count > 1)
             {
-                occurrences.Clear();
-                occurrences.Add(newEntry.StartTime);
+                // OrgRepeat should be set on all repeating events, just treat it as a normal event instead
+                items.Occurrences.Clear();
+                items.Occurrences.Add(newEntry.StartTime);
             }
-            if (occurrences.Count > 1)
+            if (items.Occurrences.Count > 1)
             {
                 try
                 {
-                    newEntry.SetRepeatPattern(occurrences);
+                    newEntry.SetRepeatPattern(items.Occurrences);
                 }
                 catch (ArgumentException)
                 {
+                    skippedEntry = new SkippedEntry(newEntry, "Could not find a valid repeat pattern for recurring event.");
                     return null;
                 }
             }
-            //if (newEntry.Subject.Contains("test-two"))
-            //    Debugger.Break();
-            Debug.Assert(occurrences.Count > 0);
+            
+            Debug.Assert(items.Occurrences.Count > 0);
             Debug.Assert(newEntry.NotesID != null && newEntry.NotesID.Length > 0);
             if (newEntry.IsRepeating && !newEntry.HasValidRepeatPattern)
+            {
                 // Some repeating events cannot be parsed (such as weird holidays (like easter) that occurr on different days each year)
+                skippedEntry = new SkippedEntry(newEntry, "Entry is recurring but does not have a valid repeat pattern");
                 return null;
+            }
             return newEntry;
         }
 
@@ -326,7 +383,7 @@ namespace TieCal
             //}
             worker.ReportProgress(0);
             List<CalendarEntry> calEntries = new List<CalendarEntry>();
-            NumberOfSkippedEntries = 0;
+            SkippedEntries = new List<SkippedEntry>();
             ISession session = null;
             try
             {
@@ -350,11 +407,14 @@ namespace TieCal
                     if (completedIds.Contains(viewEntry.NoteID))
                         continue;
                     completedIds.Add(viewEntry.NoteID);
-                    CalendarEntry calEntry = CreateCalendarEntry(viewEntry);
+                    SkippedEntry skippedEntry;
+                    CalendarEntry calEntry = CreateCalendarEntry(viewEntry, out skippedEntry);
                     if (calEntry != null)
                         calEntries.Add(calEntry);
                     else
-                        NumberOfSkippedEntries++;
+                    {
+                        SkippedEntries.Add(skippedEntry);
+                    }
                 }
                 e.Result = calEntries;
                 CalendarEntries = calEntries;
@@ -372,6 +432,11 @@ namespace TieCal
         }
 
         /// <summary>
+        /// Gets the collection of calendar entries that were skipped.
+        /// </summary>
+        /// <value>The skipped entries.</value>
+        public ICollection<SkippedEntry> SkippedEntries { get; private set; }
+        /// <summary>
         /// Gets or sets the calendar entries.
         /// </summary>
         /// <value>The calendar entries.</value>
@@ -385,7 +450,15 @@ namespace TieCal
         /// Gets the number of calendar entries that was skipped while reading the calendar.
         /// </summary>
         /// <value>The number of skipped entries.</value>
-        public int NumberOfSkippedEntries { get; private set; }
+        public int NumberOfSkippedEntries
+        {
+            get 
+            {
+                if (SkippedEntries == null)
+                    return 0;
+                return SkippedEntries.Count;
+            }
+        }
 
         /// <summary>
         /// Gets the version of Lotus Notes that is installed

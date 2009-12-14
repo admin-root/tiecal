@@ -31,9 +31,38 @@ namespace TieCal
         /// </summary>
         /// <value>The number of skipped entries.</value>
         int NumberOfSkippedEntries { get; }
+
+        /// <summary>
+        /// Gets the collection of calendar entries that were skipped.
+        /// </summary>
+        /// <value>The skipped entries.</value>
+        ICollection<SkippedEntry> SkippedEntries { get; }
+
         /// <summary>
         /// Gets the background worker used to fetch calendar entries in the background.
         /// </summary>
         BackgroundWorker FetchCalendarWorker { get; }
+    }
+
+    public class SkippedEntry
+    {
+        public SkippedEntry(CalendarEntry entry, string reason)
+        {
+            CalendarEntry = entry;
+            Reason = reason;
+        }
+        /// <summary>
+        /// Gets the calendar entry that was skipped.
+        /// </summary>
+        public CalendarEntry CalendarEntry { get; private set; }
+        /// <summary>
+        /// Gets the reason why this entry was skipped.
+        /// </summary>
+        public string Reason { get; private set; }
+
+        public override string ToString()
+        {
+            return String.Format("{0}: {1}", Reason, CalendarEntry.Subject);
+        }
     }
 }
