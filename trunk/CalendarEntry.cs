@@ -225,18 +225,6 @@ namespace TieCal
             }
         }
 
-        public bool HasValidRepeatPattern
-        {
-            get
-            {
-                if (!IsRepeating)
-                    throw new InvalidOperationException("Cannot check repeat pattern for non-repeating events");
-                if (_repeatPattern == null)
-                    return false;
-                return true;
-            }
-        }
-
         public void SetRepeatPattern(IList<DateTime> occurrences)
         {
             _repeatPattern = RepeatPattern.CreateFromOccurrences(occurrences);

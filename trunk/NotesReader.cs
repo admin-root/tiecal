@@ -274,12 +274,7 @@ namespace TieCal
             
             Debug.Assert(items.Occurrences.Count > 0);
             Debug.Assert(newEntry.NotesID != null && newEntry.NotesID.Length > 0);
-            if (newEntry.IsRepeating && !newEntry.HasValidRepeatPattern)
-            {
-                // Some repeating events cannot be parsed (such as weird holidays (like easter) that occurr on different days each year)
-                skippedEntry = new SkippedEntry(newEntry, "Entry is recurring but does not have a valid repeat pattern");
-                return null;
-            }
+
             return newEntry;
         }
 
