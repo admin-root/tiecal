@@ -180,7 +180,7 @@ namespace TieCal
         /// </summary>
         /// <param name="notesEntry">The notes entry.</param>
         /// <remarks>
-        /// More details about Notes API: http://www-01.ibm.com/support/docview.wss?rs=463&context=SSKTMJ&context=SSKTWP&dc=DB520&dc=D600&dc=DB530&dc=D700&dc=DB500&dc=DB540&dc=DB510&dc=DB550&q1=1229486&uid=swg21229486&loc=en_US&cs=utf-8&lang=en
+        /// More details about Notes API: http://www-01.ibm.com/support/docview.wss?rs=463context=SSKTMJ&amp;context=SSKTWP&amp;dc=DB520&amp;dc=D600&amp;dc=DB530&amp;dc=D700&amp;dc=DB500&amp;dc=DB540&amp;dc=DB510&amp;dc=DB550&amp;q1=1229486&amp;uid=swg21229486&amp;loc=en_US&amp;cs=utf-8&amp;lang=en
         /// </remarks>
         /// <returns></returns>
         private static CalendarEntry CreateCalendarEntry(NotesViewEntry notesEntry, out SkippedEntry skippedEntry)
@@ -228,6 +228,9 @@ namespace TieCal
                 skippedEntry = new SkippedEntry(newEntry, "Not a valid calendar entry. Could be TODO or Followup item");
                 return null;
             }
+            //if (newEntry.Subject.IndexOf("Nyårsafton", StringComparison.CurrentCultureIgnoreCase) >= 0)
+            //    Debugger.Break();
+
             if (appointmentType == "2")
             {
                 /* All Day Event */
