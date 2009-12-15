@@ -501,7 +501,7 @@ namespace TieCal
             }
             else
                 return null;
-            pattern.FirstOccurrence = occurrences[0];
+            pattern.FirstOccurrence = LocalOccurrences[0];
             pattern.NumRepeats = occurrences.Count;
             pattern.DayOfMonth = pattern.FirstOccurrence.Day;
             pattern.DayOfWeek = pattern.FirstOccurrence.DayOfWeek;
