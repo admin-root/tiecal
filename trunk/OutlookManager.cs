@@ -148,6 +148,12 @@ namespace TieCal
                         break;
                 }
             }
+            else if (entry.RepeatPattern.IsWeeklyMultipleDays)
+            {
+                pattern.RecurrenceType = OlRecurrenceType.olRecursWeekly;
+                // Typecasting is ok here, because the value of both enums match
+                pattern.DayOfWeekMask = (OlDaysOfWeek) entry.RepeatPattern.DayOfWeekMask;
+            }
             else if (entry.RepeatPattern.IsMonthly)
             {
                 pattern.RecurrenceType = OlRecurrenceType.olRecursMonthly;

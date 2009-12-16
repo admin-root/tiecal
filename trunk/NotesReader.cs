@@ -51,6 +51,10 @@ namespace TieCal
             
             return databases;
         }
+
+        /// <summary>
+        /// Internal helper class for parsing the text and date data received from the Notes COM object
+        /// </summary>
         private class NotesEntryItems
         {
             private Dictionary<string, string> stringItems;
@@ -58,8 +62,15 @@ namespace TieCal
             public TimeSpan StartTimeZoneOffset { get; private set; }
             public TimeSpan EndTimeZoneOffset { get; private set; }
             public TimeSpan LocalTimeZoneOffset { get; private set; }
-            
+
+            /// <summary>
+            /// Gets the list of occurrences for this calendar entry.
+            /// </summary>
             public List<DateTime> Occurrences { get; private set; }
+            /// <summary>
+            /// Initializes a new instance of the <see cref="NotesEntryItems"/> class based on the data in the provided notes entry.
+            /// </summary>
+            /// <param name="notesEntry">The notes entry to read data from.</param>
             public NotesEntryItems(NotesViewEntry notesEntry)
             {
                 stringItems = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -149,18 +160,44 @@ namespace TieCal
                 }
             }
 
-            public DateTime StartTime { get; set; }
-            public DateTime EndTime { get; set; }
+            /// <summary>
+            /// Gets the start time, in UTC
+            /// </summary>
+            /// <value>The start time.</value>
+            public DateTime StartTime { get; private set; }
+            /// <summary>
+            /// Gets the end time, in UTC.
+            /// </summary>
+            public DateTime EndTime { get; private set; }
+
+            /// <summary>
+            /// Determines whether there is a date item associated with the specified key.
+            /// </summary>
+            /// <param name="key">The key to look for.</param>
+            /// <returns>
+            /// 	<c>true</c> if the specified key exists; otherwise, <c>false</c>.
+            /// </returns>
             public bool HasDateItem(string key)
             {
                 return dateItems.ContainsKey(key);
             }
 
+            /// <summary>
+            /// Determines whether there is a string item associated with the specified key.
+            /// </summary>
+            /// <param name="key">The key to look for.</param>
+            /// <returns>
+            /// 	<c>true</c> if the specified key exists; otherwise, <c>false</c>.
+            /// </returns>
             public bool HasStringItem(string key)
             {
                 return stringItems.ContainsKey(key);
             }
 
+            /// <summary>
+            /// Gets the date item for the specified key, or an "empty" datetime if the key doesn't exist.
+            /// </summary>
+            /// <param name="key">The key to look for</param>
             public DateTime GetDateItemOrDefault(string key)
             {
                 if (!dateItems.ContainsKey(key))
@@ -168,6 +205,10 @@ namespace TieCal
                 return dateItems[key];
             }
 
+            /// <summary>
+            /// Gets the string item for the specified key, or <c>null</c> if the key doesn't exist
+            /// </summary>
+            /// <param name="key">The key to look for</param>
             public string GetStringItemOrDefault(string key)
             {
                 if (!stringItems.ContainsKey(key))

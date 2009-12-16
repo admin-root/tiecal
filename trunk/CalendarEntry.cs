@@ -402,7 +402,12 @@ namespace TieCal
                             pattern.DayOfWeek = DayOfWeek.Wednesday;
                             break;
                         default:
-                            throw new ArgumentException("The outlook pattern cannot be converted into a correct RepeatPattern: occurrs several days a week");
+                            // It's multiple times per week
+                            pattern.IsWeekly = false;
+                            pattern.IsWeeklyMultipleDays = true;
+                            pattern.DayOfWeekMask = (DaysOfWeek) olPattern.DayOfWeekMask;
+                            break;
+                            //throw new ArgumentException("The outlook pattern cannot be converted into a correct RepeatPattern: occurrs several days a week");
                     }
                     break;
                 case OlRecurrenceType.olRecursYearly:
@@ -418,14 +423,19 @@ namespace TieCal
             return pattern;
         }
 
+        private static List<DateTime> GetLocalTimes(IEnumerable<DateTime> occurrences)
+        {
+            var local = from occ in occurrences
+                        select occ.ToLocalTime();
+            return new List<DateTime>(local);
+        }
+
         public static RepeatPattern TryCreateFromOccurrences(IList<DateTime> occurrences)
         {
             RepeatPattern pattern = new RepeatPattern();
             if (occurrences.Count < 2)
                 throw new ArgumentException("Cannot calculate repeat pattern unless there's at least two occurrences", "occurrences");
-            var local = from occ in occurrences
-                        select occ.ToLocalTime();
-            List<DateTime> LocalOccurrences = new List<DateTime>(local);
+            List<DateTime> LocalOccurrences = GetLocalTimes(occurrences);
             bool SameMinute = true;
             bool SameHour = true;
             bool SameDayOfMonth = true;
@@ -433,11 +443,13 @@ namespace TieCal
             bool SameMonth = true;
             // TODO: this interval can vary between occurrances (and still be valid)
             pattern.IntervalTimeLength = LocalOccurrences[1] - LocalOccurrences[0];
+            var intervals = new IntervalDayRange();
             for (int i = 1; i < LocalOccurrences.Count; i++)
             {
                 var prev = LocalOccurrences[i - 1];
                 var cur = LocalOccurrences[i];
                 var diff = cur - prev;
+                intervals.AddUnique(diff);
                 //if (IntervalTimeLength != diff)
                 //  Debugger.Break();
                 if (cur.Minute != prev.Minute)
@@ -455,16 +467,19 @@ namespace TieCal
             if (!(SameMinute || SameHour || SameDayOfMonth || SameDayOfWeek || SameMonth))
                 // No pattern was found
                 return null;
-
+            
             // TODO: Maybe also make sure it's only one of the above
-            int intervalDays = (int)Math.Round(pattern.IntervalTimeLength.TotalDays);
-            if (intervalDays > 364 && intervalDays < 367)
+            int intervalDays = intervals.GetAverage();
+            int diffDays = intervals.GetBiggestDiff();
+            int diffDays2 = intervals.GetBiggestDiffFromAverage();
+            double diffPercentage = intervals.GetBiggestDiffPercentage();
+            if (intervalDays > 364 && intervalDays < 367 && intervals.GetBiggestDiffFromAverage() < 3)
             {
                 // Yearly?
                 if (SameMonth && SameDayOfMonth)
                     pattern.IsYearly = true;
                 else
-                    return null;
+                    return null; 
             }
             else if (intervalDays < 32 && intervalDays > 27)
             {
@@ -487,6 +502,20 @@ namespace TieCal
                 else
                     return null;
             }
+            else if (intervalDays > 1 && intervalDays < 7)
+            {
+                // It's weekly, but several days a week
+                if (SameHour && SameMinute)
+                {
+                    var dayMask = GetDaysOfWeek(LocalOccurrences);
+                    if (dayMask == DaysOfWeek.None)
+                        return null;
+                    pattern.IsWeeklyMultipleDays = true;
+                    pattern.DayOfWeekMask = dayMask;
+                }
+                else
+                    return null;
+            }
             else
                 return null;
             pattern.FirstOccurrence = LocalOccurrences[0];
@@ -497,6 +526,59 @@ namespace TieCal
             return pattern;
         }
 
+        /// <summary>
+        /// Checks to see which days of the week the repeating event occurrs on. If an answer can't be found, DaysOfWeek.None is returned
+        /// </summary>
+        private static DaysOfWeek GetDaysOfWeek(IList<DateTime> occurrences)
+        {
+            DaysOfWeek days = DaysOfWeek.None;
+            var dayList = new List<DayOfWeek>();
+            bool valid = false;
+            foreach (var occurrence in occurrences)
+            {
+                if (dayList.Count > 0 && dayList[0] == occurrence.DayOfWeek)
+                {
+                    // The list contains all days of a single week now, proceed to verify
+                    valid = true;
+                    break;
+                }
+                dayList.Add(occurrence.DayOfWeek);
+            }
+            if (!valid)
+                return DaysOfWeek.None;
+            for (int i = 0; i < occurrences.Count; i++)
+            {
+                if (occurrences[i].DayOfWeek != dayList[i % dayList.Count])
+                    return DaysOfWeek.None;
+                switch (occurrences[i].DayOfWeek)
+                {
+                    case DayOfWeek.Friday:
+                        days |= DaysOfWeek.Friday;
+                        break;
+                    case DayOfWeek.Monday:
+                        days |= DaysOfWeek.Monday;
+                        break;
+                    case DayOfWeek.Saturday:
+                        days |= DaysOfWeek.Saturday;
+                        break;
+                    case DayOfWeek.Sunday:
+                        days |= DaysOfWeek.Sunday;
+                        break;
+                    case DayOfWeek.Thursday:
+                        days |= DaysOfWeek.Thursday;
+                        break;
+                    case DayOfWeek.Tuesday:
+                        days |= DaysOfWeek.Tuesday;
+                        break;
+                    case DayOfWeek.Wednesday:
+                        days |= DaysOfWeek.Wednesday;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return days;
+        }
         public static RepeatPattern CreateFromOccurrences(IList<DateTime> occurrences)
         {           
             var pattern = TryCreateFromOccurrences(occurrences);
@@ -520,6 +602,7 @@ namespace TieCal
         public int NumRepeats { get; set; }
         
         public DayOfWeek DayOfWeek { get; set; }
+        public DaysOfWeek DayOfWeekMask { get; set; }
         public int DayOfMonth { get; set; }
         public int MonthOfYear { get; set; }
         public DateTime FirstOccurrence { get; set; }
@@ -532,14 +615,14 @@ namespace TieCal
         }
         
         /// <summary>
-        /// Gets a value indicating whether this is a monthly event.
+        /// Gets a value indicating whether this is a monthly event. This means it occurrs once per month on a specific day (1-31)
         /// </summary>
         public bool IsMonthly
         {
             get; set;
         }
         /// <summary>
-        /// Gets a value indicating whether this is a weekly event.
+        /// Gets a value indicating whether this is a weekly event. This means it occurrs once per week on a specific weekday (monday - sunday)
         /// </summary>
         public bool IsWeekly
         {
@@ -547,7 +630,15 @@ namespace TieCal
         }
 
         /// <summary>
-        /// Gets a value indicating whether this is a daily event.
+        /// Gets a value indicating whether this is a weekly event with multiple days. This means that it occurrs several times per week but on the same days each week (monday - sunday)
+        /// </summary>
+        public bool IsWeeklyMultipleDays 
+        { 
+            get; set; 
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether this is a daily event. This means it occurrs every single day at the same time
         /// </summary>
         public bool IsDaily
         {
@@ -562,13 +653,15 @@ namespace TieCal
         {
             StringBuilder sb = new StringBuilder();
             if (IsDaily)
-                sb.Append("Daily event.");
+                sb.Append("Every day");
             if (IsWeekly) 
-                sb.AppendFormat("Weekly event, Every {0}.", DayOfWeek);
+                sb.AppendFormat("Every week on {0}.", DayOfWeek);
+            if (IsWeeklyMultipleDays)
+                sb.AppendFormat("Every week on {0}.", DayOfWeekMask);
             if (IsMonthly)
-                sb.AppendFormat("Monthly event: On day {0}.", DayOfMonth);
+                sb.AppendFormat("Every month on the {0}.", DayOfMonth);
             if (IsYearly)
-                sb.AppendFormat("Yearly event: {0:MMMM} {1}.", FirstOccurrence, DayOfMonth);
+                sb.AppendFormat("Once per year, on {0:MMMM} {1}.", FirstOccurrence, DayOfMonth);
             if (sb.Length == 0)
                 sb.Append("Unknown repeat pattern");
             sb.AppendFormat(" {0} occurrences", NumRepeats);
@@ -597,6 +690,110 @@ namespace TieCal
             //if (FirstOccurrence != other.FirstOccurrence)
             //    return false;
             return true;
+        }
+    }
+    /// <summary>
+    /// Provides an enum representing the different days of the week. The values can be bitwise or'ed together and maps directly to 
+    /// Outlooks olDaysOfWeek enumeration
+    /// </summary>
+    [Flags]
+    public enum DaysOfWeek
+    {
+        None = 0,
+        Sunday = 1,
+        Monday = 2,
+        Tuesday = 4,
+        Wednesday = 8,
+        Thursday = 16,
+        Friday = 32,
+        Saturday = 64,
+    }
+
+    internal class IntervalDayRange
+    {
+        private List<int> items = new List<int>();
+        public IntervalDayRange()
+        {
+
+        }
+
+        public void Add(TimeSpan interval)
+        {
+            int days = (int) Math.Round(interval.TotalDays);
+            items.Add(days);
+        }
+
+        public bool AddUnique(TimeSpan interval)
+        {
+            int days = (int)Math.Round(interval.TotalDays);
+            // Check if it exists already
+            foreach (int i in items)
+                if (i == days)
+                    return false;
+            items.Add(days);
+            return true;
+        }
+
+        public int GetMax()
+        {
+            if (items.Count == 0)
+                throw new InvalidOperationException("No items in list");
+            var max = Int32.MinValue;
+            foreach (int i in items)
+                if (i > max)
+                    max = i;
+            return max;
+        }
+
+        public int GetMin()
+        {
+            if (items.Count == 0)
+                throw new InvalidOperationException("No items in list");
+            var min = Int32.MaxValue;
+            foreach (int i in items)
+                if (i < min)
+                    min = i;
+            return min;
+        }
+
+        public int GetAverage()
+        {
+            if (items.Count == 0)
+                throw new InvalidOperationException("No items in list");
+            var avg = 0;
+            foreach (int i in items)
+                avg += i;
+            return avg / items.Count;
+        }
+
+        public int GetBiggestDiff()
+        {
+            return GetMax() - GetMin();
+        }
+
+        public int GetBiggestDiffFromAverage()
+        {
+            var avg = GetAverage();
+            var upDiff = GetMax() - avg;
+            var downDiff = avg - GetMin();
+
+            return Math.Max(upDiff, downDiff);
+        }
+
+        public double GetBiggestDiffPercentage()
+        {
+            return (double)GetBiggestDiffFromAverage() / (double)GetAverage();
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether there are a difference between the items in the dayrange (true means all items are equal, false means there is at least one that is different from the others).
+        /// </summary>
+        public bool HasDiff 
+        { 
+            get 
+            { 
+                return items.Count < 2 || GetBiggestDiff() == 0;
+            } 
         }
     }
 }
