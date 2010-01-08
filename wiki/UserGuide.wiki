@@ -27,3 +27,5 @@ The last reminder option is to set a custom reminder in `TieCal`. If you use thi
      * This is because `TieCal` only works in one direction: from Notes to Outlook. You can, however (*from `TieCal` version 0.4 and newer*) tell the program to ignore certain entries in Outlook by putting them in a category called "*nosync*"
   * Why can't I click on the Synchronize button? It's dimmed out!
      * Probably you haven't selected which database to read calendar entries from. See the Configuration section above for more details.
+  * Why doesn't `TieCal` synchronize all my calendar entries?
+     * There could be several reasons. First of all, `TieCal` can only synchronize whatever is in your **local** database copy - make sure you have replicated from the server before synchronizing. Repeating events were not supported at all in 0.4 and earlier, and there are still some repeated events that aren't supported in the newer versions (typically weird/unusual repeat patterns, like easter which doesn't follow any mathematical formula.)
