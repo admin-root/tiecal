@@ -283,6 +283,8 @@ namespace TieCal
                 return false;
             if (IsRepeating && other.IsRepeating)
             {
+                //if (Subject.StartsWith("test-"))
+                //    Debugger.Break();
                 if (!RepeatPattern.EquivalentTo(other.RepeatPattern))
                     return false;
             }
@@ -363,21 +365,25 @@ namespace TieCal
     {
         private RepeatPattern()
         {
+            Interval = 1;
         }
         public static RepeatPattern CreateFromOutlookPattern(RecurrencePattern olPattern)
         {
-            RepeatPattern pattern = new RepeatPattern();
+            RepeatPattern pattern = new RepeatPattern();            
             switch (olPattern.RecurrenceType)
             {
                 case OlRecurrenceType.olRecursDaily:
                     pattern.IsDaily = true;
+                    pattern.Interval = olPattern.Interval;
                     break;
                 case OlRecurrenceType.olRecursMonthly:
                     pattern.IsMonthly = true;
                     pattern.DayOfMonth = olPattern.DayOfMonth;
+                    pattern.Interval = olPattern.Interval;
                     break;
                 case OlRecurrenceType.olRecursWeekly:
                     pattern.IsWeekly = true;
+                    pattern.Interval = olPattern.Interval;
                     switch (olPattern.DayOfWeekMask)
                     {
                         case OlDaysOfWeek.olFriday:
@@ -418,7 +424,7 @@ namespace TieCal
                 default:
                     throw new ArgumentException("Unknown repeat pattern from outlook: " + olPattern.RecurrenceType.ToString());
             }
-            pattern.NumRepeats = olPattern.Occurrences;
+            pattern.NumRepeats = olPattern.Occurrences;            
             pattern.FirstOccurrence = olPattern.PatternStartDate;
             return pattern;
         }
@@ -443,13 +449,16 @@ namespace TieCal
             bool SameMonth = true;
             // TODO: this interval can vary between occurrances (and still be valid)
             pattern.IntervalTimeLength = LocalOccurrences[1] - LocalOccurrences[0];
-            var intervals = new IntervalDayRange();
+            var intervalDayRange = new IntervalRange(7);
+            var intervalMonthRange = new IntervalRange(12);
             for (int i = 1; i < LocalOccurrences.Count; i++)
             {
                 var prev = LocalOccurrences[i - 1];
                 var cur = LocalOccurrences[i];
+                int monthDiff = (cur.Year - prev.Year) * 12 + (cur.Month - prev.Month);
                 var diff = cur - prev;
-                intervals.AddUnique(diff);
+                intervalDayRange.Add((int)Math.Round(diff.TotalDays));
+                intervalMonthRange.Add(monthDiff);
                 //if (IntervalTimeLength != diff)
                 //  Debugger.Break();
                 if (cur.Minute != prev.Minute)
@@ -467,51 +476,82 @@ namespace TieCal
             if (!(SameMinute || SameHour || SameDayOfMonth || SameDayOfWeek || SameMonth))
                 // No pattern was found
                 return null;
-            
-            // TODO: Maybe also make sure it's only one of the above
-            int intervalDays = intervals.GetAverage();
-            int diffDays = intervals.GetBiggestDiff();
-            int diffDays2 = intervals.GetBiggestDiffFromAverage();
-            double diffPercentage = intervals.GetBiggestDiffPercentage();
-            if (intervalDays > 364 && intervalDays < 367 && intervals.GetBiggestDiffFromAverage() < 3)
+            // Fun part.. try to make sense out of all this. Would be nicer if Notes just told us the repeat pattern, but hey.. it's a piece of crap so what can you expect?
+            // TODO: Re-factor this logic a bit.. way too many exit points
+            if (intervalDayRange.ItemsAreIdentical)
             {
-                // Yearly?
-                if (SameMonth && SameDayOfMonth)
-                    pattern.IsYearly = true;
-                else
-                    return null; 
-            }
-            else if (intervalDays < 32 && intervalDays > 27)
-            {
-                if (SameDayOfMonth)
-                    pattern.IsMonthly = true;
-                else
-                    return null;
-            }
-            else if (intervalDays == 7)
-            {
-                if (SameDayOfWeek)
-                    pattern.IsWeekly = true;
-                else
-                    return null;
-            }
-            else if (intervalDays == 1)
-            {
-                if (SameHour && SameMinute)
-                    pattern.IsDaily = true;
-                else
-                    return null;
-            }
-            else if (intervalDays > 1 && intervalDays < 7)
-            {
-                // It's weekly, but several days a week
-                if (SameHour && SameMinute)
+                // We have the same amount of days between each occurrence. This is either a daily or weekly event with one occurrence per day/week
+                int days = intervalDayRange.First();
+                if (days < 7)
                 {
-                    var dayMask = GetDaysOfWeek(LocalOccurrences);
-                    if (dayMask == DaysOfWeek.None)
+                    if (SameHour && SameMinute)
+                    {
+                        pattern.IsDaily = true;
+                        pattern.Interval = days;
+                    }
+                    else
                         return null;
-                    pattern.IsWeeklyMultipleDays = true;
-                    pattern.DayOfWeekMask = dayMask;
+                }
+                else 
+                {
+                    // Weekly or Bi-, Tri-, ..., -weekly
+                    // Actually, this is just a special case of several-days-a-week pattern below
+                    int weeksBetween = days / 7;
+                    if (SameDayOfWeek && weeksBetween < 10)
+                    {
+                        pattern.IsWeekly = true;
+                        pattern.Interval = weeksBetween;
+                    }
+                    else
+                        return null;
+                }
+            }
+            else if (intervalMonthRange.ItemsAreIdentical)
+            {
+                // Same amount of months between each occurrence. This is monthly or yearly
+                int months = intervalMonthRange.First();
+                if (months == 12)
+                {
+                    // Yearly?
+                    if (SameMonth && SameDayOfMonth)
+                    {
+                        pattern.IsYearly = true;
+                    }
+                    else
+                        return null;
+                }
+                else
+                {
+                    // Monthly?
+                    if (SameDayOfMonth && months < 12)
+                    {
+                        pattern.IsMonthly = true;
+                        pattern.Interval = months;
+                    }
+                   else
+                        return null;
+                }
+            }
+            else if (intervalDayRange.HasRepeatingCycle)
+            {
+                // Weird repeating pattern, e.g. several times a week
+                var intervalCycle = intervalDayRange.GetRepeatingCycle();
+                var cycleLength = LocalOccurrences[intervalCycle.Count] - LocalOccurrences[0];
+                if ((int)cycleLength.TotalDays % 7 == 0)
+                {
+                    // It's weekly (or bi-weekly etc.), but several days a week
+                    int weeksBetween = (int)cycleLength.TotalDays / 7;
+                    if (SameHour && SameMinute && weeksBetween < 10)
+                    {
+                        var dayMask = GetDaysOfWeek(LocalOccurrences);
+                        if (dayMask == DaysOfWeek.None)
+                            return null;
+                        pattern.IsWeeklyMultipleDays = true;
+                        pattern.DayOfWeekMask = dayMask;
+                        pattern.Interval = weeksBetween;
+                    }
+                    else
+                        return null;
                 }
                 else
                     return null;
@@ -519,6 +559,7 @@ namespace TieCal
             else
                 return null;
             pattern.FirstOccurrence = LocalOccurrences[0];
+            pattern.LastOccurrence = LocalOccurrences[LocalOccurrences.Count - 1];
             pattern.NumRepeats = occurrences.Count;
             pattern.DayOfMonth = pattern.FirstOccurrence.Day;
             pattern.DayOfWeek = pattern.FirstOccurrence.DayOfWeek;
@@ -591,7 +632,7 @@ namespace TieCal
         /// <summary>
         /// Gets the interval between repeats. The unit depends on the IsDaily, IsWeekly etc. properties
         /// </summary>
-        public int Interval { get { return 1; } }
+        public int Interval { get; set; }
         /// <summary>
         /// Gets or sets the length of the interval in actual time.
         /// </summary>
@@ -606,6 +647,7 @@ namespace TieCal
         public int DayOfMonth { get; set; }
         public int MonthOfYear { get; set; }
         public DateTime FirstOccurrence { get; set; }
+        public DateTime LastOccurrence { get; set; }
         /// <summary>
         /// Gets a value indicating whether this is a yearly event.
         /// </summary>
@@ -651,17 +693,21 @@ namespace TieCal
         /// </summary>
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder("Every ");
+            if (Interval > 1){
+                sb.Append (Interval);
+                sb.Append(' ');
+            }
             if (IsDaily)
-                sb.Append("Every day");
-            if (IsWeekly) 
-                sb.AppendFormat("Every week on {0}.", DayOfWeek);
+                sb.Append("day");
+            if (IsWeekly)             
+                sb.AppendFormat("week on {0}.", DayOfWeek);
             if (IsWeeklyMultipleDays)
-                sb.AppendFormat("Every week on {0}.", DayOfWeekMask);
+                sb.AppendFormat("week on {0}.", DayOfWeekMask);
             if (IsMonthly)
-                sb.AppendFormat("Every month on the {0}.", DayOfMonth);
+                sb.AppendFormat("month on the {0}.", DayOfMonth);
             if (IsYearly)
-                sb.AppendFormat("Once per year, on {0:MMMM} {1}.", FirstOccurrence, DayOfMonth);
+                sb.AppendFormat("year, on {0:MMMM} {1}.", FirstOccurrence, DayOfMonth);
             if (sb.Length == 0)
                 sb.Append("Unknown repeat pattern");
             sb.AppendFormat(" {0} occurrences", NumRepeats);
@@ -709,29 +755,121 @@ namespace TieCal
         Saturday = 64,
     }
 
-    internal class IntervalDayRange
+    internal class IntervalRange
     {
         private List<int> items = new List<int>();
-        public IntervalDayRange()
+        private int _repeatSumLimit = Int32.MaxValue;
+        public IntervalRange(int repeatSumLimit)
         {
-
+            _repeatSumLimit = repeatSumLimit;
         }
 
-        public void Add(TimeSpan interval)
+        public void Add(int range)
         {
-            int days = (int) Math.Round(interval.TotalDays);
-            items.Add(days);
+            items.Add(range);
         }
 
-        public bool AddUnique(TimeSpan interval)
+        public bool AddUnique(int range)
         {
-            int days = (int)Math.Round(interval.TotalDays);
             // Check if it exists already
             foreach (int i in items)
-                if (i == days)
+                if (i == range)
                     return false;
-            items.Add(days);
+            items.Add(range);
             return true;
+        }
+
+        private List<int> GetRepeatingCycleInternal()
+        {
+            if (items.Count < 2)
+                return null;
+            if (GetBiggestDiff() == 0)
+                // All values are the same
+                return null;
+            // Brute force naive way of finding cycles, would be neat to use Floyd's cycle-finding algorithm instead ( http://en.wikipedia.org/wiki/Cycle_detection#Tortoise_and_hare )
+            // but that doesn't seem to work here (since it will find the shortest cycle, we want the longest)
+            var cycle = new List<int>();
+            bool found = false;
+            for (int i = 0; 
+                i < items.Count - 1; 
+                i++)
+            {
+                var cur = items[i];
+                var next = items[i + 1];
+                if (cycle.Count > 1 && cycle[0] == cur)
+                {
+                    // We've found the start of our proposed cycle now (but we're not sure it's the end yet)
+                    if (cycle[1] == next && cycle.Sum() >= _repeatSumLimit)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                cycle.Add(cur);
+            }
+            if (!found ||                         // No pattern found
+                cycle.Count == items.Count     // All items added to pattern
+                )   // Pattern doesn't fully repeat throughout the interval range
+                return null;
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (cycle[i % cycle.Count] != items[i])
+                    return null;
+            }
+            return cycle;
+        }
+
+        public IList<int> GetRepeatingCycle()
+        {
+            var pattern = GetRepeatingCycleInternal();
+            if (pattern == null)
+                throw new InvalidOperationException("No repeating pattern could be found for the intervals");
+            
+            return pattern;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether there is a repeating pattern in the intervals, for instance {1,2,3, 1,2,3, 1,2,3} or {1,5,2, 1,5,2, ...}.
+        /// </summary>
+        /// <remarks>
+        /// Special Cases:
+        /// * If all intervals are identical, this property is true.
+        /// * If there are zero (0) or one (1) item in the list, then this property is false.
+        /// </remarks>
+        /// <value>
+        /// 	<c>true</c> if the intervals has a repeating pattern; otherwise, <c>false</c>.
+        /// </value>
+        public bool HasRepeatingCycle
+        {
+            get
+            {
+                var pattern = GetRepeatingCycleInternal();
+                
+                if (pattern != null)
+                    return true;
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether all intervals in the list are identical.
+        /// </summary>
+        public bool ItemsAreIdentical
+        {
+            get
+            {
+                if (items.Count == 0)
+                    return false;
+                if (items.Count == 1)
+                    return true;
+                for (int i = 1; i < items.Count; i++)
+                {
+                    if (items[i] != items[i - 1])
+                        return false;
+                }
+                return true;
+            }
         }
 
         public int GetMax()
@@ -765,7 +903,7 @@ namespace TieCal
                 avg += i;
             return avg / items.Count;
         }
-
+  
         public int GetBiggestDiff()
         {
             return GetMax() - GetMin();
@@ -794,6 +932,11 @@ namespace TieCal
             { 
                 return items.Count < 2 || GetBiggestDiff() == 0;
             } 
+        }
+
+        public int First()
+        {
+            return items[0];
         }
     }
 }
