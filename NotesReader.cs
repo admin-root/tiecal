@@ -304,6 +304,8 @@ namespace TieCal
             {
                 try
                 {
+                    //if (newEntry.Subject.StartsWith("test-"))
+                    //    Debugger.Break();
                     newEntry.SetRepeatPattern(items.Occurrences);
                 }
                 catch (ArgumentException)

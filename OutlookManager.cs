@@ -171,7 +171,10 @@ namespace TieCal
             if (entry.IsAllDay)
                 pattern.PatternStartDate = entry.RepeatPattern.FirstOccurrence.Date;
             else
+            {
                 pattern.PatternStartDate = entry.RepeatPattern.FirstOccurrence;
+                pattern.StartTime = entry.RepeatPattern.FirstOccurrence;
+            }
             pattern.Occurrences = entry.RepeatPattern.NumRepeats;
         }
         
