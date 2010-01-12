@@ -152,6 +152,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="RepeatPattern.cs" />
     <Compile Include="TesterWindow.xaml.cs">
       <DependentUpon>TesterWindow.xaml</DependentUpon>
     </Compile>
