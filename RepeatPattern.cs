@@ -110,16 +110,17 @@ namespace TieCal
             bool SameDayOfWeek = true;
             bool SameMonth = true;
 
-            var intervalDayRange = new IntervalRange(7);
-            var intervalMonthRange = new IntervalRange(12);
+            var dayIntervals = new NumberSequenceAnalyzer(7);
+            var monthIntervals = new NumberSequenceAnalyzer(12);
+
             for (int i = 1; i < LocalOccurrences.Count; i++)
             {
                 var prev = LocalOccurrences[i - 1];
                 var cur = LocalOccurrences[i];
                 int monthDiff = (cur.Year - prev.Year) * 12 + (cur.Month - prev.Month);
                 var diff = cur - prev;
-                intervalDayRange.Add((int)Math.Round(diff.TotalDays));
-                intervalMonthRange.Add(monthDiff);
+                dayIntervals.Add((int)Math.Round(diff.TotalDays));
+                monthIntervals.Add(monthDiff);
                 //if (IntervalTimeLength != diff)
                 //  Debugger.Break();
                 if (cur.Minute != prev.Minute)
@@ -140,10 +141,10 @@ namespace TieCal
             // Fun part.. try to make sense out of all this. Would be nicer if Notes just told us the 
             // repeat pattern, but hey.. it's a piece of crap so what can you expect?
             // TODO: Re-factor this logic a bit.. way too many exit points
-            if (intervalDayRange.ItemsAreIdentical)
+            if (dayIntervals.ItemsAreIdentical)
             {
                 // We have the same amount of days between each occurrence. This is either a daily or weekly event with one occurrence per day/week
-                int days = intervalDayRange.Value;
+                int days = dayIntervals.Value;
                 if (days < 7)
                 {
                     if (SameHour && SameMinute)
@@ -168,10 +169,10 @@ namespace TieCal
                         return false;
                 }
             }
-            else if (intervalMonthRange.ItemsAreIdentical)
+            else if (monthIntervals.ItemsAreIdentical && monthIntervals.Value > 0)
             {
                 // Same amount of months between each occurrence. This is monthly or yearly
-                int months = intervalMonthRange.Value;
+                int months = monthIntervals.Value;
                 if (months == 12)
                 {
                     // Yearly?
@@ -194,10 +195,10 @@ namespace TieCal
                         return false;
                 }
             }
-            else if (intervalDayRange.HasRepeatingCycle)
+            else if (dayIntervals.HasRepeatingCycle)
             {
                 // Weird repeating pattern, e.g. several times a week
-                var intervalCycle = intervalDayRange.GetRepeatingCycle();
+                var intervalCycle = dayIntervals.GetRepeatingCycle();
                 var cycleLength = LocalOccurrences[intervalCycle.Count] - LocalOccurrences[0];
                 if ((int)cycleLength.TotalDays % 7 == 0)
                 {
@@ -302,7 +303,7 @@ namespace TieCal
             return pattern;
         }
 
-
+        #region Automatically backed properties
         /// <summary>
         /// Gets the interval between repeats. The unit depends on the IsDaily, IsWeekly etc. properties
         /// </summary>
@@ -381,6 +382,7 @@ namespace TieCal
             get;
             set;
         }
+        #endregion
 
         /// <summary>
         /// Gets the ordinal (1st, 2nd, 3rd, 4th...) string representation of the specified number
@@ -429,6 +431,12 @@ namespace TieCal
             return sb.ToString();
         }
 
+        /// <summary>
+        /// "Fuzzy" comparison between two repeat patterns. This checks whether two instances are equal for the purpose of calendar merging
+        /// which may or may not be the same as total object equality
+        /// </summary>
+        /// <param name="other">The other repeat pattern to compare against</param>
+        /// <returns>True if they are equal (no changes need to be merged) or false if something has changed</returns>
         public bool EquivalentTo(RepeatPattern other)
         {
             if (IsYearly != other.IsYearly)
@@ -469,26 +477,38 @@ namespace TieCal
         Saturday = 64,
     }
 
-    internal class IntervalRange
+    /// <summary>
+    /// Utility class that takes a number of integers and provides basic sequence analysis on them.
+    /// </summary>
+    /// <remarks>
+    /// Currently, this can check if the sequence:
+    /// * Contains only the same number (e.g. only zeros, or only fives)
+    /// * Contains a sequence that repeats within the full sequence (e.g. {1,2,3, 1,2,3, 1,2,3} or {7,3, 7,3, 7,3} )
+    /// </remarks>
+    internal class NumberSequenceAnalyzer
     {
         private List<int> items = new List<int>();
         private int _repeatSumLimit = Int32.MaxValue;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IntervalRange"/> class.
+        /// Initializes a new instance of the <see cref="NumberSequenceAnalyzer"/> class.
         /// </summary>
         /// <param name="repeatSumLimit">The sum limit to use when looking for repeating cycles.</param>
-        public IntervalRange(int repeatSumLimit)
+        /// <remarks>
+        /// The sum limit is used as an indicator when looking for repeating cycles. When the sum of 
+        /// all numbers reach this AND the starting number has been found, the algorithm will assume the cycle ends.
+        /// </remarks>
+        public NumberSequenceAnalyzer(int repeatSumLimit)
         {
             _repeatSumLimit = repeatSumLimit;
         }
 
         /// <summary>
-        /// Adds a new range to the list
+        /// Adds a new number to the list
         /// </summary>
-        public void Add(int range)
+        public void Add(int number)
         {
-            items.Add(range);
+            items.Add(number);
         }
 
         /// <summary>
@@ -505,9 +525,7 @@ namespace TieCal
             // but that doesn't seem to work here (since it will find the shortest cycle, which isn't always what we want)
             var cycle = new List<int>();
             bool found = false;
-            for (int i = 0;
-                i < items.Count - 1;
-                i++)
+            for (int i = 0; i < items.Count - 1; i++)
             {
                 var cur = items[i];
                 var next = items[i + 1];
@@ -544,11 +562,11 @@ namespace TieCal
         }
 
         /// <summary>
-        /// Gets a value indicating whether there is a repeating pattern in the intervals, for instance {1,2,3, 1,2,3, 1,2,3} or {1,5,2, 1,5,2, ...}.
+        /// Gets a value indicating whether there is a repeating pattern in the numbers, for instance {1,2,3, 1,2,3, 1,2,3} or {1,5,2, 1,5,2, ...}.
         /// </summary>
         /// <remarks>
         /// Special Cases:
-        /// * If all intervals are identical, this property is true.
+        /// * If all numbers are identical, this property is true.
         /// * If there are zero (0) or one (1) item in the list, then this property is false.
         /// </remarks>
         public bool HasRepeatingCycle
@@ -565,7 +583,7 @@ namespace TieCal
         }
 
         /// <summary>
-        /// Gets a value indicating whether all intervals in the list are identical.
+        /// Gets a value indicating whether all numbers in the list are identical.
         /// </summary>
         public bool ItemsAreIdentical
         {

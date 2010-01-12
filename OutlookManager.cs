@@ -197,13 +197,19 @@ namespace TieCal
             //foreach (var name in entry.Participants)
             //    olItem.Recipients.Add(name);
             //olItem.OptionalAttendees = String.Join(", ", entry.OptionalParticipants.ToArray());
-            if (!entry.IsRepeating || olItem.GlobalAppointmentID == null)
+            if (olItem.IsRecurring && !entry.IsRepeating)
+            {
+                // Entry in notes is no longer a repeating event
+                olItem.ClearRecurrencePattern();
+            }
+            if (!olItem.IsRecurring || olItem.GlobalAppointmentID == null)
             {
                 // We're not allowed to modify these properties of existing repeating events (it's ok for new ones though)
                 olItem.Start = entry.StartTimeLocal;
                 olItem.End = entry.EndTimeLocal;
                 olItem.AllDayEvent = entry.IsAllDay;
             }
+
             olItem.UnRead = false;
             if (entry.StartTimeLocal < DateTime.Now || entry.IsAllDay ||
                 ProgramSettings.Instance.ReminderMode == ReminderMode.NoReminder)
@@ -216,7 +222,6 @@ namespace TieCal
                 olItem.ReminderOverrideDefault = true;
                 olItem.ReminderMinutesBeforeStart = ProgramSettings.Instance.ReminderMinutesBeforeStart;
             }
-            
             if (entry.IsRepeating)
                 UpdateRecurrencePattern(olItem, entry);
             if (ProgramSettings.Instance.SyncRepeatingEvents == false && entry.IsRepeating == true)
