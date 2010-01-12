@@ -112,7 +112,8 @@ namespace TieCal
 
             var dayIntervals = new NumberSequenceAnalyzer(7);
             var monthIntervals = new NumberSequenceAnalyzer(12);
-
+            var weekDays = new NumberSequenceAnalyzer(true);
+            weekDays.Add((int)LocalOccurrences[0].DayOfWeek);
             for (int i = 1; i < LocalOccurrences.Count; i++)
             {
                 var prev = LocalOccurrences[i - 1];
@@ -121,6 +122,7 @@ namespace TieCal
                 var diff = cur - prev;
                 dayIntervals.Add((int)Math.Round(diff.TotalDays));
                 monthIntervals.Add(monthDiff);
+                weekDays.Add((int)cur.DayOfWeek);
                 //if (IntervalTimeLength != diff)
                 //  Debugger.Break();
                 if (cur.Minute != prev.Minute)
@@ -195,11 +197,12 @@ namespace TieCal
                         return false;
                 }
             }
-            else if (dayIntervals.HasRepeatingCycle)
+            else if (weekDays.HasRepeatingCycle)
             {
                 // Weird repeating pattern, e.g. several times a week
-                var intervalCycle = dayIntervals.GetRepeatingCycle();
-                var cycleLength = LocalOccurrences[intervalCycle.Count] - LocalOccurrences[0];
+                var weekDaysCycle = weekDays.GetRepeatingCycle();
+                //var daysIntervalCycle = dayIntervals.GetRepeatingCycle();
+                var cycleLength = LocalOccurrences[weekDaysCycle.Count] - LocalOccurrences[0];
                 if ((int)cycleLength.TotalDays % 7 == 0)
                 {
                     // It's weekly (or bi-weekly etc.), but several days a week
@@ -503,6 +506,11 @@ namespace TieCal
             _repeatSumLimit = repeatSumLimit;
         }
 
+        private bool _findShortestCycle;
+        public NumberSequenceAnalyzer(bool findShortestCycle)
+        {
+            _findShortestCycle = true;
+        }
         /// <summary>
         /// Adds a new number to the list
         /// </summary>
@@ -529,17 +537,17 @@ namespace TieCal
             {
                 var cur = items[i];
                 var next = items[i + 1];
-                if (cycle.Count > 1 && cycle[0] == cur)
+                cycle.Add(cur);
+                if (cycle.Count > 1 && cycle[0] == next)
                 {
                     // We've found the start of our proposed cycle now (but we're not sure it's the end yet)
-                    if (cycle[1] == next && cycle.Sum() >= _repeatSumLimit)
+                    if (_findShortestCycle || cycle.Sum() >= _repeatSumLimit)
                     {
                         //Debug.WriteLine("Cycle sum: " + cycle.Sum());
                         found = true;
                         break;
                     }
                 }
-                cycle.Add(cur);
             }
             if (!found ||                       // No pattern found
                 cycle.Count == items.Count)     // All items added to pattern
