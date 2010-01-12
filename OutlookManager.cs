@@ -190,6 +190,8 @@ namespace TieCal
             olItem.Subject = entry.Subject;
             olItem.Body = entry.Body;
             olItem.Location = entry.Location;
+            // Add participants to outlook. I don't dare use this code since outlook may start sending them emails in case they exist in the address book
+            // .. and also, iTunes ignores this info anyway so there's really no use syncing it
             //foreach (Recipient rcp in olItem.Recipients)
             //    rcp.Delete();
             //foreach (var name in entry.Participants)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Office.Interop.Outlook;
+using System.Diagnostics;
 
 namespace TieCal
 {
@@ -15,6 +16,13 @@ namespace TieCal
         {
             Interval = 1;
         }
+
+        /// <summary>
+        /// Creates a repeat pattern from outlook pattern.
+        /// </summary>
+        /// <param name="olPattern">The outlook pattern to create a repeat pattern from.</param>
+        /// <returns>The newly created repeat pattern</returns>
+        /// <exception cref="ArgumentException">The outlook pattern could not be converted to a repeat pattern.</exception>
         public static RepeatPattern CreateFromOutlookPattern(RecurrencePattern olPattern)
         {
             RepeatPattern pattern = new RepeatPattern();
@@ -61,7 +69,7 @@ namespace TieCal
                             pattern.IsWeeklyMultipleDays = true;
                             pattern.DayOfWeekMask = (DaysOfWeek)olPattern.DayOfWeekMask;
                             break;
-                        //throw new ArgumentException("The outlook pattern cannot be converted into a correct RepeatPattern: occurrs several days a week");
+                        //throw new ArgumentException("The outlook pattern cannot be converted into a correct RepeatPattern: occurs several days a week");
                     }
                     break;
                 case OlRecurrenceType.olRecursYearly:
@@ -84,9 +92,15 @@ namespace TieCal
             return new List<DateTime>(local);
         }
 
-        public static RepeatPattern TryCreateFromOccurrences(IList<DateTime> occurrences)
+        /// <summary>
+        /// Tries the create a repeat pattern from a list of occurrences.
+        /// </summary>
+        /// <param name="occurrences">The occurrences to analyze.</param>
+        /// <param name="pattern">When this method returns true, the repeat pattern that matches the list of occurrences is stored in this location.</param>
+        /// <returns>True if a pattern was found, false otherwise</returns>
+        public static bool TryCreateFromOccurrences(IList<DateTime> occurrences, out RepeatPattern pattern)
         {
-            RepeatPattern pattern = new RepeatPattern();
+            pattern = new RepeatPattern();
             if (occurrences.Count < 2)
                 throw new ArgumentException("Cannot calculate repeat pattern unless there's at least two occurrences", "occurrences");
             List<DateTime> LocalOccurrences = GetLocalTimes(occurrences);
@@ -95,8 +109,7 @@ namespace TieCal
             bool SameDayOfMonth = true;
             bool SameDayOfWeek = true;
             bool SameMonth = true;
-            // TODO: this interval can vary between occurrances (and still be valid)
-            pattern.IntervalTimeLength = LocalOccurrences[1] - LocalOccurrences[0];
+
             var intervalDayRange = new IntervalRange(7);
             var intervalMonthRange = new IntervalRange(12);
             for (int i = 1; i < LocalOccurrences.Count; i++)
@@ -123,13 +136,14 @@ namespace TieCal
 
             if (!(SameMinute || SameHour || SameDayOfMonth || SameDayOfWeek || SameMonth))
                 // No pattern was found
-                return null;
-            // Fun part.. try to make sense out of all this. Would be nicer if Notes just told us the repeat pattern, but hey.. it's a piece of crap so what can you expect?
+                return false;
+            // Fun part.. try to make sense out of all this. Would be nicer if Notes just told us the 
+            // repeat pattern, but hey.. it's a piece of crap so what can you expect?
             // TODO: Re-factor this logic a bit.. way too many exit points
             if (intervalDayRange.ItemsAreIdentical)
             {
                 // We have the same amount of days between each occurrence. This is either a daily or weekly event with one occurrence per day/week
-                int days = intervalDayRange.First();
+                int days = intervalDayRange.Value;
                 if (days < 7)
                 {
                     if (SameHour && SameMinute)
@@ -138,7 +152,7 @@ namespace TieCal
                         pattern.Interval = days;
                     }
                     else
-                        return null;
+                        return false;
                 }
                 else
                 {
@@ -151,13 +165,13 @@ namespace TieCal
                         pattern.Interval = weeksBetween;
                     }
                     else
-                        return null;
+                        return false;
                 }
             }
             else if (intervalMonthRange.ItemsAreIdentical)
             {
                 // Same amount of months between each occurrence. This is monthly or yearly
-                int months = intervalMonthRange.First();
+                int months = intervalMonthRange.Value;
                 if (months == 12)
                 {
                     // Yearly?
@@ -166,7 +180,7 @@ namespace TieCal
                         pattern.IsYearly = true;
                     }
                     else
-                        return null;
+                        return false;
                 }
                 else
                 {
@@ -177,7 +191,7 @@ namespace TieCal
                         pattern.Interval = months;
                     }
                     else
-                        return null;
+                        return false;
                 }
             }
             else if (intervalDayRange.HasRepeatingCycle)
@@ -193,36 +207,37 @@ namespace TieCal
                     {
                         var dayMask = GetDaysOfWeek(LocalOccurrences);
                         if (dayMask == DaysOfWeek.None)
-                            return null;
+                            return false;
                         pattern.IsWeeklyMultipleDays = true;
                         pattern.DayOfWeekMask = dayMask;
                         pattern.Interval = weeksBetween;
                     }
                     else
-                        return null;
+                        return false;
                 }
                 else
-                    return null;
+                    return false;
             }
             else
-                return null;
+                return false;
             pattern.FirstOccurrence = LocalOccurrences[0];
             pattern.LastOccurrence = LocalOccurrences[LocalOccurrences.Count - 1];
             pattern.NumRepeats = occurrences.Count;
             pattern.DayOfMonth = pattern.FirstOccurrence.Day;
             pattern.DayOfWeek = pattern.FirstOccurrence.DayOfWeek;
             pattern.MonthOfYear = pattern.FirstOccurrence.Month;
-            return pattern;
+            return true;
         }
 
         /// <summary>
-        /// Checks to see which days of the week the repeating event occurrs on. If an answer can't be found, DaysOfWeek.None is returned
+        /// Checks to see which days of the week the repeating event occurs on. If an answer can't be found, DaysOfWeek.None is returned
         /// </summary>
         private static DaysOfWeek GetDaysOfWeek(IList<DateTime> occurrences)
         {
             DaysOfWeek days = DaysOfWeek.None;
             var dayList = new List<DayOfWeek>();
             bool valid = false;
+            // Check the first week which days the meeting occurs. Subsequent weeks must have the same pattern
             foreach (var occurrence in occurrences)
             {
                 if (dayList.Count > 0 && dayList[0] == occurrence.DayOfWeek)
@@ -235,9 +250,11 @@ namespace TieCal
             }
             if (!valid)
                 return DaysOfWeek.None;
+            // Verify that all weeks match the first week in terms of days per week
             for (int i = 0; i < occurrences.Count; i++)
             {
                 if (occurrences[i].DayOfWeek != dayList[i % dayList.Count])
+                    // One occurrence didn't match the first week, abort!
                     return DaysOfWeek.None;
                 switch (occurrences[i].DayOfWeek)
                 {
@@ -268,11 +285,20 @@ namespace TieCal
             }
             return days;
         }
+
+        /// <summary>
+        /// Analyzes the list of occurrences to determine their repeat pattern. If no pattern could be found, an exception is thrown
+        /// </summary>
+        /// <param name="occurrences">The list of occurrences to analyze.</param>
+        /// <returns>The repeat pattern that fully matches the list of occurrences</returns>
+        /// <exception cref="ArgumentException">The list of occurrences could not be mapped to a repeat pattern.</exception>
         public static RepeatPattern CreateFromOccurrences(IList<DateTime> occurrences)
         {
-            var pattern = TryCreateFromOccurrences(occurrences);
-            if (pattern == null)
+            RepeatPattern pattern;
+            
+            if (!TryCreateFromOccurrences(occurrences, out pattern))
                 throw new ArgumentException("Unable to generate a pattern based on the list of occurrences", "occurrences");
+
             return pattern;
         }
 
@@ -281,20 +307,36 @@ namespace TieCal
         /// Gets the interval between repeats. The unit depends on the IsDaily, IsWeekly etc. properties
         /// </summary>
         public int Interval { get; set; }
-        /// <summary>
-        /// Gets or sets the length of the interval in actual time.
-        /// </summary>
-        public TimeSpan IntervalTimeLength { get; set; }
+        
         /// <summary>
         /// Gets or sets the number of occurrences for this repeat pattern
         /// </summary>
         public int NumRepeats { get; set; }
 
+        /// <summary>
+        /// Gets or sets the day of week a meeting ocurrs (for weekly events, when IsWeekly is true).
+        /// </summary>
         public DayOfWeek DayOfWeek { get; set; }
+        /// <summary>
+        /// Gets or sets the days of the week a meeting ocurrs (for IsWeeklyMultipleDays events).
+        /// </summary>
         public DaysOfWeek DayOfWeekMask { get; set; }
+        /// <summary>
+        /// Gets or sets the day of month a meeting occurs (for monthly events).
+        /// </summary>
         public int DayOfMonth { get; set; }
+        /// <summary>
+        /// Gets or sets the month of year a meeting occurs. (for yearly events)
+        /// </summary>
+        /// <value>The month of year.</value>
         public int MonthOfYear { get; set; }
+        /// <summary>
+        /// Gets or sets the first occurrence for this repeat pattern.
+        /// </summary>
         public DateTime FirstOccurrence { get; set; }
+        /// <summary>
+        /// Gets or sets the last occurrence for this repeat pattern.
+        /// </summary>
         public DateTime LastOccurrence { get; set; }
         /// <summary>
         /// Gets a value indicating whether this is a yearly event.
@@ -306,7 +348,7 @@ namespace TieCal
         }
 
         /// <summary>
-        /// Gets a value indicating whether this is a monthly event. This means it occurrs once per month on a specific day (1-31)
+        /// Gets a value indicating whether this is a monthly event. This means it occurs once per month on a specific day (1-31)
         /// </summary>
         public bool IsMonthly
         {
@@ -314,7 +356,7 @@ namespace TieCal
             set;
         }
         /// <summary>
-        /// Gets a value indicating whether this is a weekly event. This means it occurrs once per week on a specific weekday (monday - sunday)
+        /// Gets a value indicating whether this is a weekly event. This means it occurs once per week on a specific weekday (monday - sunday)
         /// </summary>
         public bool IsWeekly
         {
@@ -323,7 +365,7 @@ namespace TieCal
         }
 
         /// <summary>
-        /// Gets a value indicating whether this is a weekly event with multiple days. This means that it occurrs several times per week but on the same days each week (monday - sunday)
+        /// Gets a value indicating whether this is a weekly event with multiple days. This means that it occurs several times per week but on the same days each week (monday - sunday)
         /// </summary>
         public bool IsWeeklyMultipleDays
         {
@@ -332,7 +374,7 @@ namespace TieCal
         }
 
         /// <summary>
-        /// Gets a value indicating whether this is a daily event. This means it occurrs every single day at the same time
+        /// Gets a value indicating whether this is a daily event. This means it occurs every single day at the same time
         /// </summary>
         public bool IsDaily
         {
@@ -431,35 +473,36 @@ namespace TieCal
     {
         private List<int> items = new List<int>();
         private int _repeatSumLimit = Int32.MaxValue;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IntervalRange"/> class.
+        /// </summary>
+        /// <param name="repeatSumLimit">The sum limit to use when looking for repeating cycles.</param>
         public IntervalRange(int repeatSumLimit)
         {
             _repeatSumLimit = repeatSumLimit;
         }
 
+        /// <summary>
+        /// Adds a new range to the list
+        /// </summary>
         public void Add(int range)
         {
             items.Add(range);
         }
 
-        public bool AddUnique(int range)
-        {
-            // Check if it exists already
-            foreach (int i in items)
-                if (i == range)
-                    return false;
-            items.Add(range);
-            return true;
-        }
-
+        /// <summary>
+        /// Tries to find a pattern in the sequence that repeats over and over again. If no such pattern could be found, <c>null</c> is returned.
+        /// </summary>
+        /// <returns></returns>
         private List<int> GetRepeatingCycleInternal()
         {
             if (items.Count < 2)
                 return null;
-            if (GetBiggestDiff() == 0)
-                // All values are the same
+            if (ItemsAreIdentical)
                 return null;
             // Brute force naive way of finding cycles, would be neat to use Floyd's cycle-finding algorithm instead ( http://en.wikipedia.org/wiki/Cycle_detection#Tortoise_and_hare )
-            // but that doesn't seem to work here (since it will find the shortest cycle, we want the longest)
+            // but that doesn't seem to work here (since it will find the shortest cycle, which isn't always what we want)
             var cycle = new List<int>();
             bool found = false;
             for (int i = 0;
@@ -473,15 +516,15 @@ namespace TieCal
                     // We've found the start of our proposed cycle now (but we're not sure it's the end yet)
                     if (cycle[1] == next && cycle.Sum() >= _repeatSumLimit)
                     {
+                        //Debug.WriteLine("Cycle sum: " + cycle.Sum());
                         found = true;
                         break;
                     }
                 }
                 cycle.Add(cur);
             }
-            if (!found ||                         // No pattern found
-                cycle.Count == items.Count     // All items added to pattern
-                )   // Pattern doesn't fully repeat throughout the interval range
+            if (!found ||                       // No pattern found
+                cycle.Count == items.Count)     // All items added to pattern
                 return null;
             for (int i = 0; i < items.Count; i++)
             {
@@ -508,9 +551,6 @@ namespace TieCal
         /// * If all intervals are identical, this property is true.
         /// * If there are zero (0) or one (1) item in the list, then this property is false.
         /// </remarks>
-        /// <value>
-        /// 	<c>true</c> if the intervals has a repeating pattern; otherwise, <c>false</c>.
-        /// </value>
         public bool HasRepeatingCycle
         {
             get
@@ -544,71 +584,19 @@ namespace TieCal
             }
         }
 
-        public int GetMax()
-        {
-            if (items.Count == 0)
-                throw new InvalidOperationException("No items in list");
-            var max = Int32.MinValue;
-            foreach (int i in items)
-                if (i > max)
-                    max = i;
-            return max;
-        }
-
-        public int GetMin()
-        {
-            if (items.Count == 0)
-                throw new InvalidOperationException("No items in list");
-            var min = Int32.MaxValue;
-            foreach (int i in items)
-                if (i < min)
-                    min = i;
-            return min;
-        }
-
-        public int GetAverage()
-        {
-            if (items.Count == 0)
-                throw new InvalidOperationException("No items in list");
-            var avg = 0;
-            foreach (int i in items)
-                avg += i;
-            return avg / items.Count;
-        }
-
-        public int GetBiggestDiff()
-        {
-            return GetMax() - GetMin();
-        }
-
-        public int GetBiggestDiffFromAverage()
-        {
-            var avg = GetAverage();
-            var upDiff = GetMax() - avg;
-            var downDiff = avg - GetMin();
-
-            return Math.Max(upDiff, downDiff);
-        }
-
-        public double GetBiggestDiffPercentage()
-        {
-            return (double)GetBiggestDiffFromAverage() / (double)GetAverage();
-        }
-
         /// <summary>
-        /// Gets a value indicating whether there are a difference between the items in the dayrange (true means all items are equal, false means there is at least one that is different from the others).
+        /// Gets the value of the items in this list. This property can only be used if <see cref="ItemsAreIdentical"/> is true.
         /// </summary>
-        public bool HasDiff
+        public int Value
         {
             get
             {
-                return items.Count < 2 || GetBiggestDiff() == 0;
+                if (items.Count == 0)
+                    throw new ArgumentOutOfRangeException("No items in the range");
+                if (!ItemsAreIdentical)
+                    throw new InvalidOperationException("Cannot get value property unless all items are identical");
+                return items[0];
             }
-        }
-
-        public int First()
-        {
-            return items[0];
         }
     }
 }
