@@ -51,6 +51,13 @@ namespace TieCal
             CalendarEntry = entry;
             Reason = reason;
         }
+
+        public SkippedEntry(CalendarEntry entry, string reason, IEnumerable<DateTime> occurrences)
+        {
+            CalendarEntry = entry;
+            Reason = reason;
+            Occurrences = occurrences;
+        }
         /// <summary>
         /// Gets the calendar entry that was skipped.
         /// </summary>
@@ -60,6 +67,7 @@ namespace TieCal
         /// </summary>
         public string Reason { get; private set; }
 
+        public IEnumerable<DateTime> Occurrences { get; private set; }
         public override string ToString()
         {
             return String.Format("{0}: {1}", Reason, CalendarEntry.Subject);

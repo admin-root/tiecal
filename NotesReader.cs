@@ -304,13 +304,13 @@ namespace TieCal
             {
                 try
                 {
-                    if (newEntry.Subject.StartsWith("test-"))
-                        Debugger.Break();
+                    //if (newEntry.Subject.StartsWith("test-"))
+                    //    Debugger.Break();
                     newEntry.SetRepeatPattern(items.Occurrences);
                 }
                 catch (ArgumentException)
                 {
-                    skippedEntry = new SkippedEntry(newEntry, "Could not find a valid repeat pattern for recurring event.");
+                    skippedEntry = new SkippedEntry(newEntry, "Could not find a valid repeat pattern for recurring event.", items.Occurrences);
                     return null;
                 }
             }
