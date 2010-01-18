@@ -1,0 +1,36 @@
+﻿<Window
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	x:Class="TieCal.SelectNotesDbDialog"
+	x:Name="Window"
+	Title="Select Notes Database"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" SizeToContent="Height" Width="500">
+
+	<Grid x:Name="LayoutRoot" Margin="0,4,0,0">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="Auto" />
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="Auto" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" MinHeight="60.483"/>
+		</Grid.RowDefinitions>
+		<StackPanel Margin="8,0,8,0" VerticalAlignment="Top" Grid.Column="1" Grid.ColumnSpan="2">
+			<TextBlock Text="Select Database" FontWeight="Bold" Margin="0,0,0,6" />
+			<TextBlock Text="Please select the notes database that contains the calendar entries you wish to synchronized." TextWrapping="Wrap" />
+		</StackPanel>
+		<ComboBox x:Name="cmbNotesDB" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" Margin="4,2,4,2"/>
+		<Button Padding="12,1,12,1" Content="Refresh" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Margin="0,0,8,0" x:Name="btnRefresh" Click="btnRefresh_Click" />
+		<TextBlock VerticalAlignment="Top" TextWrapping="Wrap" Grid.Row="2" HorizontalAlignment="Right" Margin="0,0,9,0" Grid.Column="1" Grid.ColumnSpan="2"><Run FontWeight="Bold" Text="Hint:"/><Run Text=" It is most often named &quot;"/><Run FontStyle="Italic" Text="mail\yourname.nsf"/><Run Text="&quot;"/></TextBlock>
+		<Grid Grid.Column="0" Grid.Row="3" Grid.RowSpan="1" Grid.ColumnSpan="4" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="0,18,0,0">
+			<UniformGrid Rows="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0">
+				<Button Content="OK" Margin="4,8,4,8" Padding="12,2,12,2" VerticalAlignment="Center" x:Name="btnOk" IsDefault="True" Click="btnOk_Click"/>
+				<Button Padding="12,2,12,2" Content="Cancel" VerticalAlignment="Center" IsCancel="True" Click="btnCancel_Click" />
+			</UniformGrid>
+		</Grid>
+		<Image HorizontalAlignment="Left" Width="64" Height="64" Grid.RowSpan="3" Source="Images\notes-64.png" Margin="8,0,8,8" VerticalAlignment="Top" />
+	</Grid>
+</Window>
