@@ -393,7 +393,7 @@ namespace TieCal
         /// <param name="number">The number to represent ordinally</param>
         private string GetOrdinalString(int number)
         {
-            switch (Interval)
+            switch (number)
             {
                 case 1:
                     return "1st";
