@@ -1,0 +1,11 @@
+﻿<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="TieCal.TesterWindow"
+    Title="TesterWindow" Height="300" Width="300" xmlns:TieCal="clr-namespace:TieCal">
+    <Grid>
+        
+    	<TieCal:InfoBox ShowConfirmButton="True" Message="Hello There" InfoBoxType="Warning" Margin="7,8,6,21"/>
+        
+    </Grid>
+</Window>
