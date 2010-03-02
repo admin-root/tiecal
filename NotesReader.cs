@@ -226,9 +226,16 @@ namespace TieCal
         /// <returns></returns>
         private static CalendarEntry CreateCalendarEntry(NotesViewEntry notesEntry, out SkippedEntry skippedEntry)
         {
+            if (notesEntry == null)
+                throw new ArgumentNullException("notesEntry");
             CalendarEntry newEntry = new CalendarEntry();
             newEntry.NotesID = notesEntry.UniversalID;
             NotesDocument doc = notesEntry.Document;
+            if (doc == null)
+            {
+                skippedEntry = new SkippedEntry(newEntry, "Notes entry doesn't seem to be a calendar entry");
+                return null;
+            }
             Debug.Assert(doc.UniversalID == notesEntry.UniversalID);
             var items = new NotesEntryItems(notesEntry);
             skippedEntry = null;
