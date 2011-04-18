@@ -303,6 +303,7 @@ namespace TieCal
             List<CalendarEntry> calEntries = new List<CalendarEntry>();
             try
             {
+                // TODO: This can throw COM exception (HRESULT=0x8001010A, RPC_E_SERVERCALL_RETRYLATER) - we should handle that by retrying at least once...
                 MAPIFolder calendarFolder = GetCalendarFolder();
                 int i = 0;
                 foreach (AppointmentItem item in calendarFolder.Items)
