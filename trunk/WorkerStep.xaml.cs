@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows.Data;
 using System.IO;
+using System.Diagnostics;
 
 namespace TieCal
 {
@@ -175,20 +176,28 @@ namespace TieCal
             WorkStage = WorkStepStage.Working;
         }
 
+        private void WriteSourceLineInfo(TextWriter writer, StackTrace trace)
+        {
+            var frame = trace.GetFrame(0);
+            writer.WriteLine(" Source Location: {0}:{1},{2}", frame.GetFileName(), frame.GetFileLineNumber(), frame.GetFileColumnNumber());
+        }
+
         private void LogException(Exception ex)
         {
             if (ex == null)
                 return;
-            string logfile = Path.Combine(ProgramSettings.SaveFolder, "crashlog.txt");
+            string logfile = Path.Combine(ProgramSettings.SaveFolder, "crashlog.txt");            
             using (TextWriter writer = new StreamWriter(logfile, true))
             {
                 writer.WriteLine("===================  {0} =======================", DateTime.Now.ToString());
-                writer.WriteLine("Exception from {0}: {1}", Title, ex.Message);
-                writer.WriteLine("  Stacktrace: {0}", ex.StackTrace);
+                writer.WriteLine("Exception from {0}: {1}", Title, ex.Message);                
+                WriteSourceLineInfo(writer, new StackTrace(ex, true)); 
+                writer.WriteLine("  Stacktrace: {0}", ex.StackTrace.ToString());
                 Exception innerEx = ex.InnerException;
                 while (innerEx != null)
                 {
                     writer.WriteLine("[inner exception] {0}:{1}", innerEx.GetType(), innerEx.Message);
+                    WriteSourceLineInfo(writer, new StackTrace(ex, true));
                     writer.WriteLine(" StackTrace: {0}", innerEx.StackTrace);
                     innerEx = innerEx.InnerException;
                 }
